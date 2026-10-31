@@ -1,0 +1,1935 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>منصة السلاسل النصية Strings - الصف العاشر</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Cairo & Fira Code -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Fira+Code:wght@500;700;800&display=swap" rel="stylesheet">
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Cairo', 'sans-serif'],
+            mono: ['"Fira Code"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: linear-gradient(135deg, #fdf2f8 0%, #f5f3ff 45%, #f0fdf4 100%);
+      min-height: 100vh;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #10b981;
+      border-radius: 9999px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #d1fae5;
+    }
+    .pill-input {
+      background: transparent;
+      outline: none;
+      font-weight: 900;
+      text-align: center;
+    }
+    .sticky-header-container {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(253, 242, 248, 0.96);
+      backdrop-filter: blur(12px);
+      border-bottom: 2px solid rgba(244, 114, 182, 0.3);
+      padding-top: 0.5rem;
+      padding-bottom: 0.6rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.05);
+    }
+    .code-editor-light {
+      background-color: #ffffff;
+      border: 2px solid #cbd5e1;
+      color: #0f172a;
+      font-family: 'Fira Code', monospace;
+      font-size: 1.15rem;
+      line-height: 1.7;
+    }
+    .code-output-light {
+      background-color: #f8fafc;
+      border: 2px solid #e2e8f0;
+      color: #047857;
+      font-family: 'Fira Code', monospace;
+      font-size: 1.1rem;
+      line-height: 1.6;
+    }
+    .parallelogram-shape {
+      transform: skewX(-15deg);
+    }
+    .parallelogram-content {
+      transform: skewX(15deg);
+    }
+  </style>
+</head>
+<body class="text-slate-800 antialiased p-2 md:p-6 pb-28 text-base md:text-lg">
+
+  <header class="sticky-header-container max-w-7xl mx-auto space-y-3">
+    <!-- Top Pill Controls Row -->
+    <div class="flex flex-wrap items-center justify-between gap-2.5 text-sm md:text-base font-bold">
+      <!-- Mascot Hamad Welcome & Teacher Credits -->
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="flex items-center gap-1.5 bg-purple-100 text-purple-950 px-3 py-1 rounded-full font-black text-xs md:text-sm">
+          <span>🧑‍🎓</span>
+          <span>مرحباً يا بطلات بايثون!</span>
+        </div>
+        <div class="flex items-center gap-1.5 bg-gradient-to-r from-pink-500 to-purple-600 text-white px-3.5 py-1 rounded-full font-black text-xs md:text-sm shadow-xs">
+          <span>✨</span>
+          <span>إعداد وتصميم: أ. وفاء عليان - قسم الحاسوب</span>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs md:text-sm font-bold">
+        <!-- Attendance -->
+        <div class="bg-emerald-50 border-2 border-emerald-400 text-emerald-900 px-3 py-1 rounded-full flex items-center gap-1">
+          <span class="font-black text-emerald-800">الحضور:</span>
+          <input type="number" id="presentStudents" value="28" min="0" oninput="calculateAttendance()" class="pill-input w-10 text-emerald-800 text-base font-black">
+        </div>
+
+        <!-- Absent (Auto calculated) -->
+        <div class="bg-white border-2 border-pink-300 text-pink-700 px-3 py-1 rounded-full flex items-center gap-1">
+          <span class="font-black">الغياب:</span>
+          <input type="text" id="absentDisplay" value="0 طالبة" readonly class="pill-input w-20 text-pink-600 font-black">
+        </div>
+
+        <!-- Total Students -->
+        <div class="bg-white border-2 border-pink-300 text-slate-800 px-3 py-1 rounded-full flex items-center gap-1">
+          <span class="text-slate-600 font-black">الإجمالي:</span>
+          <input type="number" id="totalStudents" value="28" min="1" oninput="calculateAttendance()" class="pill-input w-10 text-purple-900 text-base font-black">
+        </div>
+
+        <!-- Class Selection: Tenth 2 & Tenth 6 -->
+        <div class="bg-white border-2 border-purple-400 text-purple-900 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-xs">
+          <span class="font-black">الصف:</span>
+          <select id="classSelect" onchange="onClassChange()" class="font-black bg-purple-50 text-purple-950 border border-purple-300 rounded-lg px-2 py-0.5 text-xs md:text-sm cursor-pointer outline-none">
+            <option value="عاشر / 2" selected>عاشر / 2</option>
+            <option value="عاشر / 6">عاشر / 6</option>
+          </select>
+        </div>
+
+        <!-- Live Real Device Date -->
+        <div class="bg-white border-2 border-pink-300 text-slate-700 px-3.5 py-1 rounded-full flex items-center gap-1.5">
+          <span class="text-base">🗓️</span>
+          <span id="currentDateDisplay" class="font-black text-slate-800 text-xs md:text-sm">جاري ضبط التاريخ...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Banner Row with Centered Lesson Title -->
+    <div class="flex flex-col lg:flex-row items-stretch gap-3">
+      <!-- Centered Lesson Banner -->
+      <div class="flex-1 bg-gradient-to-r from-purple-900 via-indigo-900 to-fuchsia-800 rounded-3xl p-3 sm:p-4 md:p-5 text-white shadow-md flex items-center justify-between border-2 border-purple-300/40 relative overflow-hidden">
+        <div class="z-10 flex items-center gap-1 sm:gap-2">
+          <span class="text-3xl sm:text-4xl md:text-5xl">👧</span>
+        </div>
+
+        <!-- Centralized Title & Details -->
+        <div class="z-10 text-center space-y-1 mx-auto px-1 sm:px-2">
+          <div class="inline-flex items-center gap-1.5 sm:gap-2 bg-amber-400 text-amber-950 px-3 py-0.5 rounded-full text-[11px] sm:text-xs md:text-sm font-black shadow-xs">
+            <span>الوحدة 2: المعالجة الرقمية (ص 75 - 79)</span>
+            <span>•</span>
+            <span id="activeClassTag">عاشر / 2</span>
+          </div>
+          <!-- Title scaled down as requested for elegant mobile viewing -->
+          <h1 class="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white drop-shadow-md">
+            السلاسل النصية Strings في Python
+          </h1>
+          <p class="text-[11px] sm:text-xs md:text-sm text-purple-200 font-bold">
+            تخصيص السلاسل • الفهرسة (Indexing) • التقطيع (Slicing) • دمج وتكرار ودوال النصوص
+          </p>
+        </div>
+
+        <div class="z-10 flex items-center gap-1 sm:gap-2">
+          <span class="text-3xl sm:text-4xl md:text-5xl">🤖</span>
+        </div>
+      </div>
+
+      <!-- Real-Time Auto-Countdown Period Card -->
+      <div class="bg-white border-2 border-pink-300 rounded-3xl p-3 sm:p-4 shadow-sm flex flex-col justify-between min-w-[300px] lg:w-96">
+        <div class="flex items-center justify-between gap-2">
+          <!-- Digital Countdown -->
+          <div class="flex items-center gap-1.5">
+            <button onclick="syncTimerWithLiveClock()" title="مزامنة مع ساعة الجهاز" class="w-8 h-8 rounded-full border border-slate-300 hover:bg-slate-100 flex items-center justify-center text-slate-600 text-xs transition">
+              🔄
+            </button>
+            <div class="flex items-center gap-1 font-mono font-black text-rose-600 text-xl sm:text-2xl tracking-wider">
+              <span>⏱️</span>
+              <span id="periodCountdown">00:00</span>
+            </div>
+          </div>
+
+          <div class="w-px h-6 bg-slate-200"></div>
+
+          <!-- Kuwait School Periods -->
+          <div class="text-right flex-1">
+            <select id="periodSelect" onchange="onPeriodChange()" class="w-full text-right font-black text-slate-800 text-xs bg-slate-50 border border-slate-200 rounded-xl px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer">
+              <option value="auto" selected>⚡ كشف تلقائي حسب ساعة الجهاز</option>
+              <option value="1-2">1 + 2 (07:55 - 09:30)</option>
+              <option value="2-3">2 + 3 (08:45 - 10:20)</option>
+              <option value="3-4">3 + 4 (09:35 - 11:20)</option>
+              <option value="4-5">4 + 5 (10:35 - 12:10)</option>
+              <option value="5-6">5 + 6 (11:25 - 01:05)</option>
+              <option value="6-7">6 + 7 (12:20 - 01:55)</option>
+              <option value="p1">الحصة الأولى (07:55 - 08:40)</option>
+              <option value="p2">الحصة الثانية (08:45 - 09:30)</option>
+              <option value="p3">الحصة الثالثة (09:35 - 10:20)</option>
+              <option value="p4">الحصة الرابعة (10:35 - 11:20)</option>
+              <option value="p5">الحصة الخامسة (11:25 - 12:10)</option>
+              <option value="p6">الحصة السادسة (12:20 - 01:05)</option>
+              <option value="p7">الحصة السابعة (01:10 - 01:55)</option>
+              <option value="custom">مؤقت حر (90 دقيقة)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mt-1.5 pt-1.5 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-600">
+          <span id="periodTimeStatus" class="text-emerald-700 flex items-center gap-1 font-black">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+            الحصة جارية الآن
+          </span>
+          <div>
+            <span>نهاية الحصة: </span>
+            <span id="periodEndTimeDisplay" class="font-mono text-purple-900 font-black">--:--</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs (8 Distinct Lessons) -->
+    <div class="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+      <button onclick="toggleFullScreen()" class="bg-white border-2 border-pink-300 hover:border-pink-400 text-slate-800 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-2xl shadow-xs text-xs sm:text-sm md:text-base font-black flex items-center gap-1.5 transition hover:bg-pink-50/50">
+        <span>🖥️ ملء الشاشة</span>
+      </button>
+
+      <nav class="flex flex-wrap items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 max-w-full">
+        <button onclick="switchTab('cia')" id="tab-cia" class="nav-btn px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl text-xs sm:text-sm md:text-base font-black transition border-2 border-pink-200 bg-white hover:bg-purple-50 text-slate-700 shadow-xs whitespace-nowrap">
+          🛡️ 1. الأمن السيبراني
+        </button>
+        <button onclick="switchTab('intro')" id="tab-intro" class="nav-btn px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl text-xs sm:text-sm md:text-base font-black transition border-2 border-pink-200 bg-white hover:bg-purple-50 text-slate-700 shadow-xs whitespace-nowrap">
+          💡 2. التمهيد والنشاط
+        </button>
+        <button onclick="switchTab('indexing')" id="tab-indexing" class="nav-btn px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl text-xs sm:text-sm md:text-base font-black transition border-2 border-emerald-600 bg-emerald-600 text-white shadow-md whitespace-nowrap">
+          🔤 3. الفهرسة (Indexing)
+        </button>
+        <button onclick="switchTab('slicing')" id="tab-slicing" class="nav-btn px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl text-xs sm:text-sm md:text-base font-black transition border-2 border-pink-200 bg-white hover:bg-purple-50 text-slate-700 shadow-xs whitespace-nowrap">
+          ✂️ 4. التقطيع (Slicing)
+        </button>
+        <button onclick="switchTab('concat')" id="tab-concat" class="nav-btn px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl text-xs sm:text-sm md:text-base font-black transition border-2 border-pink-200 bg-white hover:bg-purple-50 text-slate-700 shadow-xs whitespace-nowrap">
+          ➕ 5. دمج وتكرار النصوص
+        </button>
+        <button onclick="switchTab('methods')" id="tab-methods" class="nav-btn px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl text-xs sm:text-sm md:text-base font-black transition border-2 border-pink-200 bg-white hover:bg-purple-50 text-slate-700 shadow-xs whitespace-nowrap">
+          ⚙️ 6. دوال السلاسل
+        </button>
+        <button onclick="switchTab('worksheet')" id="tab-worksheet" class="nav-btn px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl text-xs sm:text-sm md:text-base font-black transition border-2 border-pink-200 bg-white hover:bg-purple-50 text-slate-700 shadow-xs whitespace-nowrap">
+          📝 7. ورقة عمل (8)
+        </button>
+        <button onclick="switchTab('lab')" id="tab-lab" class="nav-btn px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl text-xs sm:text-sm md:text-base font-black transition border-2 border-pink-200 bg-white hover:bg-purple-50 text-slate-700 shadow-xs whitespace-nowrap">
+          🏆 8. التحدي والمختبر
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto space-y-6">
+
+    <!-- ============================================== -->
+    <!-- TAB 1: الأمن السيبراني CIA -->
+    <!-- ============================================== -->
+    <section id="content-cia" class="tab-content hidden space-y-6">
+      <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border-2 border-purple-200 space-y-6">
+        <div class="flex items-center justify-between border-b-2 border-purple-100 pb-3">
+          <div class="flex items-center gap-3">
+            <span class="text-3xl">🛡️</span>
+            <h2 class="text-2xl md:text-3xl font-black text-slate-900">الأمن السيبراني وثالوث الحماية (CIA Triad)</h2>
+          </div>
+          <span class="text-xs md:text-sm font-black bg-purple-100 text-purple-950 px-3.5 py-1 rounded-full">ص 23 - 29</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- C -->
+          <div onclick="selectCiaPillar('confidentiality')" id="card-confidentiality" class="bg-purple-50 p-5 rounded-2xl border-2 border-purple-300 cursor-pointer hover:border-purple-500 transition space-y-2">
+            <span class="text-xs font-black bg-purple-200 text-purple-950 px-2.5 py-0.5 rounded-full">1. السرية (Confidentiality)</span>
+            <h4 class="font-black text-slate-900 text-lg">الوصول للمصرح لهم فقط</h4>
+            <p class="text-xs md:text-sm text-slate-700 font-bold leading-relaxed">
+              حماية البيانات من الاطلاع غير المصرح به كاستخدام رمز المرور (PIN) أو التشفير.
+            </p>
+          </div>
+
+          <!-- I -->
+          <div onclick="selectCiaPillar('integrity')" id="card-integrity" class="bg-blue-50 p-5 rounded-2xl border-2 border-blue-200 cursor-pointer hover:border-blue-400 transition space-y-2">
+            <span class="text-xs font-black bg-blue-200 text-blue-950 px-2.5 py-0.5 rounded-full">2. النزاهة (Integrity)</span>
+            <h4 class="font-black text-slate-900 text-lg">سلامة ودقة البيانات</h4>
+            <p class="text-xs md:text-sm text-slate-700 font-bold leading-relaxed">
+              منع أي تعديل أو تلاعب في المعلومات وضمان صحتها أثناء النقل والتخزين.
+            </p>
+          </div>
+
+          <!-- A -->
+          <div onclick="selectCiaPillar('availability')" id="card-availability" class="bg-emerald-50 p-5 rounded-2xl border-2 border-emerald-200 cursor-pointer hover:border-emerald-400 transition space-y-2">
+            <span class="text-xs font-black bg-emerald-200 text-emerald-950 px-2.5 py-0.5 rounded-full">3. التوفر (Availability)</span>
+            <h4 class="font-black text-slate-900 text-lg">إتاحة الخدمة 24/7</h4>
+            <p class="text-xs md:text-sm text-slate-700 font-bold leading-relaxed">
+              إتاحة الأنظمة والخدمات للمستخدمين عند الحاجة ومقاومة هجمات حجب الخدمة (DoS).
+            </p>
+          </div>
+        </div>
+
+        <!-- Kuwait Mobile ID Biometric Simulation -->
+        <div class="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 rounded-3xl border-2 border-emerald-300 space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-2xl">🇰🇼</span>
+              <h3 class="font-black text-slate-900 text-lg md:text-xl">تطبيق واقعي: بصمة الوجه في تطبيق هويتي (Biometrics)</h3>
+            </div>
+            <button onclick="triggerFaceScan()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-5 py-2 rounded-xl text-sm transition shadow-xs">
+              تجربة المصادقة البيومترية 📷
+            </button>
+          </div>
+          <div id="scanStatusBox" class="bg-white p-4 rounded-2xl border border-emerald-200 font-black text-center text-slate-800 text-sm md:text-base">
+            انقري على الزر لمحاكاة التحقق من بصمة الوجه كعامل مصادقة بيومتري (Something you are).
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- TAB 2: التمهيد والنشاط الاستهلالي -->
+    <!-- ============================================== -->
+    <section id="content-intro" class="tab-content hidden space-y-6">
+      <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border-2 border-amber-200 space-y-6">
+        <!-- Value of the week -->
+        <div class="bg-amber-50 border-2 border-amber-300 p-4 rounded-2xl flex items-center justify-between">
+          <div class="flex items-center gap-2 font-black text-amber-950 text-base md:text-lg">
+            <span>🌟</span>
+            <span>القيمة التربوية: تقدير العلم والعلماء وحماية الملكية الفكرية</span>
+          </div>
+          <span class="text-xs font-black bg-amber-200 text-amber-950 px-3 py-1 rounded-full">سؤال نقاشي</span>
+        </div>
+
+        <!-- Cartoon Blackboard Starter Activity -->
+        <div class="bg-slate-900 text-white p-6 md:p-8 rounded-3xl space-y-5 border-4 border-amber-400 shadow-lg">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-700 pb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-3xl">👧🔍</span>
+              <div>
+                <h3 class="text-xl md:text-2xl font-black text-amber-300">نشاط تمهيدي: ساعدي المحققة "منال" في اكتشاف الأخطاء البرمجية</h3>
+                <span class="text-xs text-slate-400 font-bold">لدينا متغير يحمل الاسم: <code class="text-emerald-400 font-mono">name = "دلال مبارك الصباح"</code></span>
+              </div>
+            </div>
+
+            <!-- 2-Minute Timer -->
+            <div class="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-2xl border border-slate-600">
+              <span class="text-2xl">⏳</span>
+              <span id="starterTimerDisplay" class="font-mono text-2xl font-black text-amber-400">02:00</span>
+              <button onclick="startStarterTimer()" id="starterTimerBtn" class="bg-amber-400 hover:bg-amber-500 text-slate-950 font-black px-3 py-1 rounded-xl text-xs transition mr-1">
+                بدء الـ 2 دقيقة
+              </button>
+            </div>
+          </div>
+
+          <!-- Code lines with errors -->
+          <div class="space-y-3 font-mono text-lg md:text-2xl font-black" dir="ltr">
+            <div id="starterLine1" class="p-4 bg-slate-800 border-2 border-slate-700 rounded-2xl text-slate-200 flex items-center justify-between">
+              <span>print(my name is:  name)</span>
+              <span id="starterErr1" class="hidden text-xs font-sans font-black bg-rose-600 text-white px-3 py-1 rounded-full">خطأ: نسيان علامات التنصيص ومعامل الربط</span>
+            </div>
+            <div id="starterLine2" class="p-4 bg-slate-800 border-2 border-slate-700 rounded-2xl text-slate-200 flex items-center justify-between">
+              <span>print("my name is: " + name)</span>
+              <span id="starterErr2" class="hidden text-xs font-sans font-black bg-emerald-600 text-white px-3 py-1 rounded-full">التعليمة الصحيحة 100%</span>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+            <button onclick="revealStarterSolution()" class="bg-amber-400 hover:bg-amber-500 text-slate-950 font-black px-6 py-3 rounded-2xl text-base transition">
+              كشف وتظليل الأخطاء بالأحمر 🔍
+            </button>
+            <div id="starterResultExplanation" class="hidden text-base md:text-lg font-black text-amber-300">
+              💡 التعليمة الأولى خاطئة لعدم حصر النص بين علامات تنصيص <code class="bg-slate-800 px-2 py-0.5 rounded">" "</code> وعدم استخدام معامل الدمج <code class="bg-slate-800 px-2 py-0.5 rounded">+</code>.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- TAB 3: الفهرسة (INDEXING) - مطابقة للصورة تماماً -->
+    <!-- ============================================== -->
+    <section id="content-indexing" class="tab-content space-y-6">
+      <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border-2 border-emerald-300 space-y-6">
+        
+        <!-- Header Banner -->
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border-b-2 border-emerald-100 pb-4">
+          <div>
+            <span class="text-sm font-black bg-emerald-100 text-emerald-950 px-3.5 py-1 rounded-full">ص 76 - 77 من الكتاب المدرسي</span>
+            <h2 class="text-2xl md:text-4xl font-black text-slate-900 mt-1">🔤 الفهرسة (Indexing) في Python</h2>
+          </div>
+          <div class="bg-emerald-50 border-2 border-emerald-300 text-emerald-950 px-4 py-2 rounded-2xl text-sm font-black flex items-center gap-3 font-mono" dir="ltr">
+            <span>Pos Index starts at: <b class="text-emerald-700 text-base">0</b></span>
+            <span>|</span>
+            <span>Neg Index ends at: <b class="text-rose-700 text-base">-1</b></span>
+          </div>
+        </div>
+
+        <!-- Word Input and Controller -->
+        <div class="bg-emerald-50/70 p-4 rounded-2xl border-2 border-emerald-200 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-2 flex-wrap">
+            <label class="text-sm md:text-base font-black text-emerald-950">✏️ الكلمة الحالية للفهرسة:</label>
+            <input type="text" id="indexingWordInput" value="Free Kuwait" maxlength="25" oninput="renderIndexingTable()" class="px-4 py-2 border-2 border-emerald-400 rounded-xl font-mono text-lg font-black text-center bg-white focus:outline-none focus:border-emerald-600">
+            <button onclick="renderIndexingTable()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-5 py-2 rounded-xl text-sm transition">
+              تحديث الجدول
+            </button>
+          </div>
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="text-xs font-bold text-slate-500">كلمات سريعة:</span>
+            <button onclick="setIndexingWord('Free Kuwait')" class="px-3 py-1 bg-white hover:bg-emerald-100 border border-emerald-300 rounded-lg text-xs font-bold text-emerald-900 transition">Free Kuwait</button>
+            <button onclick="setIndexingWord('Python')" class="px-3 py-1 bg-white hover:bg-emerald-100 border border-emerald-300 rounded-lg text-xs font-bold text-emerald-900 transition">Python</button>
+            <button onclick="setIndexingWord('Kuwait 2026')" class="px-3 py-1 bg-white hover:bg-emerald-100 border border-emerald-300 rounded-lg text-xs font-bold text-emerald-900 transition">Kuwait 2026</button>
+          </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- جدول الفهرسة العرضي الأفقي - المطابق تماماً للصورة المرفقة -->
+        <!-- ========================================================= -->
+        <div class="overflow-x-auto pb-2 custom-scroll">
+          <div class="bg-emerald-50/90 p-4 rounded-3xl border-2 border-emerald-300 space-y-2 min-w-[640px]">
+            <div class="flex items-center justify-between text-xs font-mono font-bold text-emerald-900" dir="ltr">
+              <span class="font-black">➡️ Python Indexing Direction (Left to Right)</span>
+              <span>Word Length: <b id="wordLengthDisplay" class="text-purple-700 text-sm">11</b> characters</span>
+            </div>
+
+            <table class="w-full text-center border-collapse bg-white rounded-2xl shadow-xs overflow-hidden" dir="ltr">
+              <tbody>
+                <!-- السطر الأول: الفهرس الموجب [+] ثم الأرقام أفقياً -->
+                <tr id="positiveRowContainer" class="bg-emerald-100 text-emerald-950 text-xs font-mono font-black"></tr>
+                <!-- السطر الثاني: حروف السلسلة ثم الحروف أفقياً -->
+                <tr id="characterRowContainer" class="text-slate-900 font-mono text-xl md:text-2xl font-black bg-white"></tr>
+                <!-- السطر الثالث: الفهرس العكسي [-] ثم الأرقام السالبة أفقياً -->
+                <tr id="negativeRowContainer" class="bg-rose-50 text-rose-800 text-xs font-mono font-black"></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- أمثلة الفهرسة الحية -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 font-mono text-xs md:text-sm" dir="ltr">
+          <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200">
+            <span class="font-sans text-slate-500 block text-xs">أول حرف (فهرس موجب):</span>
+            <code class="text-emerald-700 font-black">print(text[0])</code> ➔ <b class="bg-emerald-100 px-2 py-0.5 rounded text-emerald-950" id="exIdx0">'F'</b>
+          </div>
+          <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200">
+            <span class="font-sans text-slate-500 block text-xs">ثاني حرف:</span>
+            <code class="text-emerald-700 font-black">print(text[1])</code> ➔ <b class="bg-emerald-100 px-2 py-0.5 rounded text-emerald-950" id="exIdx1">'r'</b>
+          </div>
+          <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200">
+            <span class="font-sans text-slate-500 block text-xs">آخر حرف (فهرس عكسي):</span>
+            <code class="text-rose-700 font-black">print(text[-1])</code> ➔ <b class="bg-rose-100 px-2 py-0.5 rounded text-rose-950" id="exIdxNeg1">'t'</b>
+          </div>
+          <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200">
+            <span class="font-sans text-slate-500 block text-xs">الحرف قبل الأخير:</span>
+            <code class="text-rose-700 font-black">print(text[-2])</code> ➔ <b class="bg-rose-100 px-2 py-0.5 rounded text-rose-950" id="exIdxNeg2">'i'</b>
+          </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- بنك أسئلة وتدريبات الفهرسة بخطوط كبيرة وبارزة -->
+        <!-- ============================================== -->
+        <div class="bg-slate-50 p-6 md:p-8 rounded-3xl border-2 border-emerald-300 space-y-6">
+          <div class="flex items-center justify-between border-b-2 border-emerald-200 pb-3">
+            <div class="flex items-center gap-3">
+              <span class="text-3xl">📝</span>
+              <h3 class="text-2xl md:text-3xl font-black text-slate-900">بنك أسئلة وتدريبات الفهرسة (Indexing)</h3>
+            </div>
+            <span class="text-sm font-black bg-emerald-200 text-emerald-950 px-4 py-1.5 rounded-full">ص 76 - 77</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <!-- 1. ما ناتج تنفيذ تعليمة -->
+            <div class="bg-white p-6 rounded-3xl border-2 border-emerald-300 shadow-sm space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-black bg-purple-100 text-purple-900 px-3.5 py-1 rounded-full">1. ما ناتج تنفيذ التعليمة؟</span>
+                <span class="text-2xl">🔍</span>
+              </div>
+              <p class="font-black text-slate-800 text-lg md:text-xl">
+                إذا علمتِ أن: <code class="font-mono bg-slate-900 text-emerald-400 px-3 py-1 rounded-xl text-xl" dir="ltr">word = "Kuwait"</code><br>
+                فما هو ناتج تنفيذ: <code class="font-mono bg-slate-900 text-amber-300 px-3 py-1 rounded-xl text-xl" dir="ltr">print(word[-1])</code>؟
+              </p>
+              <div class="grid grid-cols-2 gap-3 pt-2">
+                <button onclick="checkIndexingQ(this, false, 'qOutIdx1Res', 't')" class="p-3.5 border-2 border-slate-300 hover:border-purple-400 rounded-2xl font-mono text-xl md:text-2xl font-black transition">
+                  'K'
+                </button>
+                <button onclick="checkIndexingQ(this, true, 'qOutIdx1Res', 't')" class="p-3.5 border-2 border-slate-300 hover:border-emerald-500 rounded-2xl font-mono text-xl md:text-2xl font-black transition">
+                  't'
+                </button>
+              </div>
+              <div id="qOutIdx1Res" class="text-base font-black min-h-[26px]"></div>
+            </div>
+
+            <!-- 2. اكتبي التعليمة البرمجية -->
+            <div class="bg-white p-6 rounded-3xl border-2 border-emerald-300 shadow-sm space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-black bg-emerald-100 text-emerald-950 px-3.5 py-1 rounded-full">2. اكتبي التعليمة البرمجية</span>
+                <span class="text-2xl">⌨️</span>
+              </div>
+              <p class="font-black text-slate-800 text-lg md:text-xl">
+                إذا كانت السلسلة: <code class="font-mono bg-slate-900 text-emerald-400 px-3 py-1 rounded-xl text-xl" dir="ltr">name = "Kuwait"</code><br>
+                اكتبي التعليمة لطباعة <strong>الحرف الثاني ('u')</strong> بالفهرس الموجب:
+              </p>
+              <div class="flex gap-2 pt-2">
+                <input type="text" id="qWriteIdxInput" placeholder="اكتبي التعليمة هنا..." class="flex-1 px-4 py-3 border-2 border-slate-300 rounded-2xl font-mono text-lg md:text-xl font-black text-center bg-slate-50 focus:outline-none focus:border-purple-600" dir="ltr">
+                <button onclick="checkCodeWriting('qWriteIdxInput', ['print(name[1])', 'name[1]'], 'qWriteIdxRes', 'u')" class="bg-purple-600 hover:bg-purple-700 text-white font-black px-6 py-3 rounded-2xl text-base transition">
+                  تحقق ✨
+                </button>
+              </div>
+              <div id="qWriteIdxRes" class="text-base font-black min-h-[26px]"></div>
+            </div>
+
+            <!-- 3. صح أم خطأ -->
+            <div class="bg-white p-6 rounded-3xl border-2 border-emerald-300 shadow-sm space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-black bg-amber-100 text-amber-950 px-3.5 py-1 rounded-full">3. صح أم خطأ</span>
+                <span class="text-2xl">⚖️</span>
+              </div>
+              <p class="font-black text-slate-800 text-lg md:text-xl leading-relaxed">
+                "يبدأ الفهرس الموجب (Positive Index) لأول حرف من اليسار في بايثون بالرقم <strong>1</strong>."
+              </p>
+              <div class="flex gap-3 pt-2">
+                <button onclick="checkTfCustom(this, false, 'qTfIdxRes', '❌ خطأ! الفهرس الموجب يبدأ دائماً بالصفر 0 لأول حرف من اليسار.')" class="flex-1 py-3 border-2 border-slate-300 hover:border-rose-500 rounded-2xl text-lg font-black transition">
+                  صح (True)
+                </button>
+                <button onclick="checkTfCustom(this, true, 'qTfIdxRes', '✅ ممتازة وصحيحة! العبارة خاطئة لأن الفهرس الموجب يبدأ دائماً بالرقم 0.')" class="flex-1 py-3 border-2 border-slate-300 hover:border-emerald-500 rounded-2xl text-lg font-black transition">
+                  خطأ (False)
+                </button>
+              </div>
+              <div id="qTfIdxRes" class="text-base font-black min-h-[26px]"></div>
+            </div>
+
+            <!-- 4. أكملي الفراغ -->
+            <div class="bg-white p-6 rounded-3xl border-2 border-emerald-300 shadow-sm space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-black bg-blue-100 text-blue-950 px-3.5 py-1 rounded-full">4. أكملي الفراغ</span>
+                <span class="text-2xl">✏️</span>
+              </div>
+              <p class="font-black text-slate-800 text-lg md:text-xl leading-relaxed">
+                في السلسلة النصية <code class="font-mono bg-slate-900 text-amber-300 px-3 py-1 rounded-xl text-xl" dir="ltr">"Hi Ali"</code>، يكون رقم الفهرس الموجب لخانة <strong>المسافة الفارغة</strong> هو:
+              </p>
+              <div class="flex gap-2 pt-2">
+                <input type="text" id="qFillIdxInput" placeholder="اكتبي رقم الفهرس..." class="flex-1 px-4 py-3 border-2 border-slate-300 rounded-2xl font-mono text-xl font-black text-center bg-slate-50 focus:outline-none focus:border-blue-600" dir="ltr">
+                <button onclick="checkSingleBlank('qFillIdxInput', '2', 'qFillIdxRes', 'إجابة نموذجية! H=0, i=1, والمسافة هي الفهرس 2.')" class="bg-blue-600 hover:bg-blue-700 text-white font-black px-6 py-3 rounded-2xl text-base transition">
+                  تحقق ✨
+                </button>
+              </div>
+              <div id="qFillIdxRes" class="text-base font-black min-h-[26px]"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- TAB 4: التقطيع (SLICING) - قيم ثلاث وتظليل حي -->
+    <!-- ============================================== -->
+    <section id="content-slicing" class="tab-content hidden space-y-6">
+      <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border-2 border-emerald-300 space-y-6">
+        
+        <!-- Header Banner -->
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border-b-2 border-emerald-100 pb-4">
+          <div>
+            <span class="text-sm font-black bg-purple-100 text-purple-950 px-3.5 py-1 rounded-full">ص 78 من الكتاب المدرسي</span>
+            <h2 class="text-2xl md:text-4xl font-black text-slate-900 mt-1">✂️ التقطيع (Slicing) في Python</h2>
+          </div>
+          <div class="bg-purple-50 border-2 border-purple-300 text-purple-950 px-4 py-2 rounded-2xl text-sm font-black flex items-center gap-2 font-mono" dir="ltr">
+            <span>Syntax:</span>
+            <b class="text-purple-900 text-base">text[start : stop : step]</b>
+          </div>
+        </div>
+
+        <!-- Custom Word for Slicing -->
+        <div class="bg-emerald-50/70 p-4 rounded-2xl border-2 border-emerald-200 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-2 flex-wrap">
+            <label class="text-sm md:text-base font-black text-emerald-950">✏️ الكلمة الحالية لجهاز التقطيع:</label>
+            <input type="text" id="slicingWordInput" value="Free Kuwait" maxlength="25" oninput="renderSlicingTable()" class="px-4 py-2 border-2 border-emerald-400 rounded-xl font-mono text-lg font-black text-center bg-white focus:outline-none focus:border-emerald-600">
+            <button onclick="renderSlicingTable()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-5 py-2 rounded-xl text-sm transition">
+              تحديث الجدول
+            </button>
+          </div>
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="text-xs font-bold text-slate-500">أمثلة الكتاب:</span>
+            <button onclick="setSlicingWord('Free Kuwait')" class="px-3 py-1 bg-white hover:bg-emerald-100 border border-emerald-300 rounded-lg text-xs font-bold text-emerald-900 transition">Free Kuwait</button>
+            <button onclick="setSlicingWord('316012200641')" class="px-3 py-1 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-lg text-xs font-black text-amber-950 transition">الرقم المدني (316012200641)</button>
+            <button onclick="setSlicingWord('Python')" class="px-3 py-1 bg-white hover:bg-emerald-100 border border-emerald-300 rounded-lg text-xs font-bold text-emerald-900 transition">Python</button>
+          </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- جدول التقطيع العرضي الأفقي - مع التلوين الحي المطابق للصورة -->
+        <!-- ========================================================= -->
+        <div class="overflow-x-auto pb-2 custom-scroll">
+          <div class="bg-emerald-50/90 p-4 rounded-3xl border-2 border-emerald-300 space-y-2 min-w-[640px]">
+            <div class="flex items-center justify-between text-xs font-mono font-bold text-emerald-900" dir="ltr">
+              <span class="font-black">➡️ Python Indexing Direction (Left to Right)</span>
+              <span>Word Length: <b id="sliceWordLengthDisplay" class="text-purple-700 text-sm">11</b> characters</span>
+            </div>
+
+            <table class="w-full text-center border-collapse bg-white rounded-2xl shadow-xs overflow-hidden" dir="ltr">
+              <tbody>
+                <!-- السطر الأول: الفهرس الموجب [+] ثم الأرقام أفقياً -->
+                <tr id="slicePosRowContainer" class="bg-emerald-100 text-emerald-950 text-xs font-mono font-black"></tr>
+                <!-- السطر الثاني: حروف السلسلة مع التظليل النعناعي الأخضر في التقطيع -->
+                <tr id="sliceCharRowContainer" class="text-slate-900 font-mono text-xl md:text-2xl font-black bg-white"></tr>
+                <!-- السطر الثالث: الفهرس العكسي [-] ثم الأرقام السالبة أفقياً -->
+                <tr id="sliceNegRowContainer" class="bg-rose-50 text-rose-800 text-xs font-mono font-black"></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 3 Slicing Sliders Controls (Start, Stop, Step) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-5 rounded-3xl border-2 border-slate-200">
+          <!-- Start -->
+          <div class="bg-white p-4 rounded-2xl border-2 border-emerald-300 space-y-2 shadow-xs">
+            <div class="flex items-center justify-between font-black text-sm text-slate-800">
+              <span>بداية القطع (Start):</span>
+              <input type="number" id="sliceStartNum" min="0" max="11" value="0" oninput="syncStartNum(this.value)" class="w-12 text-center font-mono font-black bg-emerald-50 border border-emerald-300 rounded-lg text-emerald-900">
+            </div>
+            <input type="range" id="sliceStartSlider" min="0" max="11" value="0" oninput="updateLiveSlice()" class="w-full accent-emerald-600 cursor-pointer">
+            <span class="text-xs text-slate-500 font-bold block">موقع أول حرف مشمول</span>
+          </div>
+
+          <!-- Stop -->
+          <div class="bg-white p-4 rounded-2xl border-2 border-emerald-300 space-y-2 shadow-xs">
+            <div class="flex items-center justify-between font-black text-sm text-slate-800">
+              <span>نهاية القطع (Stop - غير مشمول):</span>
+              <input type="number" id="sliceStopNum" min="0" max="11" value="4" oninput="syncStopNum(this.value)" class="w-12 text-center font-mono font-black bg-emerald-50 border border-emerald-300 rounded-lg text-emerald-900">
+            </div>
+            <input type="range" id="sliceStopSlider" min="0" max="11" value="4" oninput="updateLiveSlice()" class="w-full accent-emerald-600 cursor-pointer">
+            <span class="text-xs text-rose-600 font-bold block">يتوقف قبل هذا الرقم مباشرة</span>
+          </div>
+
+          <!-- Step -->
+          <div class="bg-white p-4 rounded-2xl border-2 border-purple-300 space-y-2 shadow-xs">
+            <div class="flex items-center justify-between font-black text-sm text-purple-950">
+              <span>مقدار الخطوة (Step):</span>
+              <select id="sliceStepSelect" onchange="updateLiveSlice()" class="font-mono font-black border-2 border-purple-300 rounded-lg px-2 py-0.5 bg-purple-50 text-purple-900 text-sm">
+                <option value="1" selected>1 (خطوة خطوة)</option>
+                <option value="2">2 (تخطي حرف)</option>
+                <option value="-1">-1 (التقطيع العكسي)</option>
+              </select>
+            </div>
+            <div class="flex gap-1.5 pt-1">
+              <button onclick="setQuickStep(1)" class="flex-1 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-950 rounded-xl text-xs font-black">خطوة 1</button>
+              <button onclick="setQuickStep(2)" class="flex-1 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-950 rounded-xl text-xs font-black">قفز 2</button>
+              <button onclick="setQuickStep(-1)" class="flex-1 py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-950 rounded-xl text-xs font-black">عكس -1</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- GIANT CODE & RESULT DISPLAY -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Giant Code Display -->
+          <div class="bg-slate-900 text-emerald-400 p-4 sm:p-6 rounded-3xl border-2 border-slate-700 shadow-md space-y-1">
+            <span class="text-xs font-bold text-slate-400 block">التعليمة البرمجية الحالية (Python Code):</span>
+            <div id="giantCodeDisplay" class="font-mono text-2xl sm:text-3xl md:text-5xl font-black text-emerald-400 py-1 break-all" dir="ltr">
+              print(text[0:4])
+            </div>
+          </div>
+
+          <!-- Giant Result Display -->
+          <div class="bg-emerald-600 text-white p-4 sm:p-6 rounded-3xl border-2 border-emerald-400 shadow-md space-y-1">
+            <span class="text-xs font-bold text-emerald-100 block">الناتج المستقطع الفعلي (Output):</span>
+            <div id="giantOutputDisplay" class="font-mono text-2xl sm:text-3xl md:text-5xl font-black text-amber-300 py-1 break-all" dir="ltr">
+              "Free"
+            </div>
+          </div>
+        </div>
+
+        <!-- CIVIL ID CHALLENGE WITH REVERSE STRING (NO CENTURY) -->
+        <div class="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 p-4 rounded-2xl space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-2xl">🏆</span>
+              <h3 class="font-black text-slate-900 text-base">تحدي المجموعات: الرقم المدني الكويتي (316012200641)</h3>
+            </div>
+            <span class="text-xs bg-amber-200 text-amber-950 px-2 py-0.5 rounded-full font-black">جدول 4-4 ص 78</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+            <div class="bg-white p-3 rounded-xl border border-amber-200 space-y-1">
+              <span class="font-black text-emerald-800">1. الشهر (01):</span>
+              <code class="font-mono bg-emerald-50 px-1 py-0.5 rounded block text-center font-bold text-sm">id[3:5]</code>
+            </div>
+            <div class="bg-white p-3 rounded-xl border border-amber-200 space-y-1">
+              <span class="font-black text-pink-800">2. اليوم (22):</span>
+              <code class="font-mono bg-pink-50 px-1 py-0.5 rounded block text-center font-bold text-sm">id[5:7]</code>
+            </div>
+            <div class="bg-white p-3 rounded-xl border border-purple-200 space-y-1">
+              <span class="font-black text-purple-800">3. عكس السلسلة:</span>
+              <code class="font-mono bg-purple-50 px-1 py-0.5 rounded block text-center font-bold text-sm">id[::-1]</code>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- بنك أسئلة وتدريبات التقطيع بخطوط كبيرة وبارزة -->
+        <!-- ============================================== -->
+        <div class="bg-slate-50 p-6 md:p-8 rounded-3xl border-2 border-emerald-300 space-y-6">
+          <div class="flex items-center justify-between border-b-2 border-emerald-200 pb-3">
+            <div class="flex items-center gap-3">
+              <span class="text-3xl">✂️</span>
+              <h3 class="text-2xl md:text-3xl font-black text-slate-900">بنك أسئلة وتدريبات التقطيع (Slicing)</h3>
+            </div>
+            <span class="text-sm font-black bg-purple-200 text-purple-950 px-4 py-1.5 rounded-full">ص 78</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <!-- 1. ما ناتج استقطاع التعليمة -->
+            <div class="bg-white p-6 rounded-3xl border-2 border-purple-300 shadow-sm space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-black bg-purple-100 text-purple-900 px-3.5 py-1 rounded-full">1. ما ناتج استقطاع التعليمة؟</span>
+                <span class="text-2xl">🔍</span>
+              </div>
+              <p class="font-black text-slate-800 text-lg md:text-xl">
+                إذا علمتِ أن: <code class="font-mono bg-slate-900 text-emerald-400 px-3 py-1 rounded-xl text-xl" dir="ltr">text = "Python"</code><br>
+                فما هو ناتج تنفيذ: <code class="font-mono bg-slate-900 text-amber-300 px-3 py-1 rounded-xl text-xl" dir="ltr">print(text[0:4])</code>؟
+              </p>
+              <div class="grid grid-cols-2 gap-3 pt-2">
+                <button onclick="checkSlicingQ(this, true, 'qOutSlice1Res', 'Pyth')" class="p-3.5 border-2 border-slate-300 hover:border-emerald-500 rounded-2xl font-mono text-xl md:text-2xl font-black transition">
+                  "Pyth"
+                </button>
+                <button onclick="checkSlicingQ(this, false, 'qOutSlice1Res', 'Pyth')" class="p-3.5 border-2 border-slate-300 hover:border-rose-400 rounded-2xl font-mono text-xl md:text-2xl font-black transition">
+                  "Pytho"
+                </button>
+              </div>
+              <div id="qOutSlice1Res" class="text-base font-black min-h-[26px]"></div>
+            </div>
+
+            <!-- 2. اكتبي التعليمة البرمجية -->
+            <div class="bg-white p-6 rounded-3xl border-2 border-purple-300 shadow-sm space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-black bg-emerald-100 text-emerald-950 px-3.5 py-1 rounded-full">2. اكتبي التعليمة البرمجية</span>
+                <span class="text-2xl">⌨️</span>
+              </div>
+              <p class="font-black text-slate-800 text-lg md:text-xl">
+                إذا كانت السلسلة: <code class="font-mono bg-slate-900 text-emerald-400 px-3 py-1 rounded-xl text-xl" dir="ltr">msg = "Kuwait"</code><br>
+                اكتبي التعليمة لطباعة السلسلة <strong>معكوسة بالكامل</strong>:
+              </p>
+              <div class="flex gap-2 pt-2">
+                <input type="text" id="qWriteSliceInput" placeholder="اكتبي تعليمة التقطيع هنا..." class="flex-1 px-4 py-3 border-2 border-slate-300 rounded-2xl font-mono text-lg md:text-xl font-black text-center bg-slate-50 focus:outline-none focus:border-purple-600" dir="ltr">
+                <button onclick="checkCodeWriting('qWriteSliceInput', ['print(msg[::-1])', 'msg[::-1]'], 'qWriteSliceRes', 'tiawuK')" class="bg-purple-600 hover:bg-purple-700 text-white font-black px-6 py-3 rounded-2xl text-base transition">
+                  تحقق ✨
+                </button>
+              </div>
+              <div id="qWriteSliceRes" class="text-base font-black min-h-[26px]"></div>
+            </div>
+
+            <!-- 3. صح أم خطأ -->
+            <div class="bg-white p-6 rounded-3xl border-2 border-purple-300 shadow-sm space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-black bg-amber-100 text-amber-950 px-3.5 py-1 rounded-full">3. صح أم خطأ</span>
+                <span class="text-2xl">⚖️</span>
+              </div>
+              <p class="font-black text-slate-800 text-lg md:text-xl leading-relaxed">
+                "التعليمة <code class="font-mono bg-slate-900 text-emerald-400 px-2 py-0.5 rounded text-lg" dir="ltr">text[:4]</code> تعني أن التقطيع يبدأ تلقائياً من أول حرف في السلسلة (الموقع 0)."
+              </p>
+              <div class="flex gap-3 pt-2">
+                <button onclick="checkTfCustom(this, true, 'qTfSliceRes', '✅ ممتازة وصحيحة! عند حذف قيمة البداية يبدأ بايثون تلقائياً من الموقع 0.')" class="flex-1 py-3 border-2 border-slate-300 hover:border-emerald-500 rounded-2xl text-lg font-black transition">
+                  صح (True)
+                </button>
+                <button onclick="checkTfCustom(this, false, 'qTfSliceRes', '❌ خطأ! العبارة صحيحة لأن ترك خانة البداية فارغة يبدأ من 0 دائماً.')" class="flex-1 py-3 border-2 border-slate-300 hover:border-rose-500 rounded-2xl text-lg font-black transition">
+                  خطأ (False)
+                </button>
+              </div>
+              <div id="qTfSliceRes" class="text-base font-black min-h-[26px]"></div>
+            </div>
+
+            <!-- 4. أكملي الفراغ -->
+            <div class="bg-white p-6 rounded-3xl border-2 border-purple-300 shadow-sm space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-black bg-blue-100 text-blue-950 px-3.5 py-1 rounded-full">4. أكملي الفراغ</span>
+                <span class="text-2xl">✏️</span>
+              </div>
+              <p class="font-black text-slate-800 text-lg md:text-xl leading-relaxed">
+                في تعليمة التقطيع <code class="font-mono bg-slate-900 text-amber-300 px-3 py-1 rounded-xl text-xl" dir="ltr">text[1:5]</code>، الحرف الموجود عند الفهرس 5 يعتبر:
+              </p>
+              <div class="flex gap-2 pt-2">
+                <input type="text" id="qFillSliceInput" placeholder="اكتبي: مشمول أم غير مشمول؟" class="flex-1 px-4 py-3 border-2 border-slate-300 rounded-2xl text-lg font-black text-center bg-slate-50 focus:outline-none focus:border-blue-600">
+                <button onclick="checkSingleBlank('qFillSliceInput', 'غير مشمول', 'qFillSliceRes', 'إجابة رائعة! خانة النهاية Stop دائماً غير مشمولة في بايثون.')" class="bg-blue-600 hover:bg-blue-700 text-white font-black px-6 py-3 rounded-2xl text-base transition">
+                  تحقق ✨
+                </button>
+              </div>
+              <div id="qFillSliceRes" class="text-base font-black min-h-[26px]"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ============================================== -->
+    <!-- TAB 5: دمج وتكرار النصوص (+) و (*) -->
+    <!-- ============================================== -->
+    <section id="content-concat" class="tab-content hidden space-y-6">
+      <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border-2 border-pink-200 space-y-6">
+        <div class="flex items-center justify-between border-b-2 border-pink-100 pb-3">
+          <div class="flex items-center gap-3">
+            <span class="text-3xl">➕</span>
+            <h2 class="text-2xl md:text-3xl font-black text-slate-900">دمج (Concatenation) وتكرار (Repetition) النصوص</h2>
+          </div>
+          <span class="text-xs md:text-sm font-black bg-pink-100 text-pink-950 px-3.5 py-1 rounded-full">ص 78 - 79</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Concat (+) -->
+          <div class="bg-pink-50/70 p-6 rounded-3xl border-2 border-pink-200 space-y-3">
+            <span class="text-xs font-black bg-pink-200 text-pink-950 px-3 py-1 rounded-full">1. معامل الدمج (+)</span>
+            <h3 class="text-xl font-black text-pink-950">دمج سلسلتين معاً</h3>
+            <p class="text-sm text-slate-700 font-bold">يستخدم لربط ودمج النصوص جنباً إلى جنب دون إجراء عملية حسابية.</p>
+            <div class="bg-slate-900 text-emerald-400 p-4 rounded-2xl font-mono text-base font-black" dir="ltr">
+              a = "Free"<br>
+              b = "Kuwait"<br>
+              print(a + " " + b)  # -> Free Kuwait
+            </div>
+          </div>
+
+          <!-- Repeat (*) -->
+          <div class="bg-purple-50/70 p-6 rounded-3xl border-2 border-purple-200 space-y-3">
+            <span class="text-xs font-black bg-purple-200 text-purple-950 px-3 py-1 rounded-full">2. معامل التكرار (*)</span>
+            <h3 class="text-xl font-black text-purple-950">تكرار السلسلة n مرات</h3>
+            <p class="text-sm text-slate-700 font-bold">يستخدم لتكرار السلسلة بعدد المرات المحدد في الرقم الصحيح.</p>
+            <div class="bg-slate-900 text-amber-300 p-4 rounded-2xl font-mono text-base font-black" dir="ltr">
+              star = "* "<br>
+              print(star * 5)  # -> * * * * *
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- TAB 6: دوال وأساليب السلاسل النصية -->
+    <!-- ============================================== -->
+    <section id="content-methods" class="tab-content hidden space-y-6">
+      <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border-2 border-indigo-200 space-y-6">
+        <div class="flex items-center justify-between border-b-2 border-indigo-100 pb-3">
+          <div class="flex items-center gap-3">
+            <span class="text-3xl">⚙️</span>
+            <h2 class="text-2xl md:text-3xl font-black text-slate-900">أهم دوال وأساليب معالجة السلاسل النصية</h2>
+          </div>
+          <span class="text-xs md:text-sm font-black bg-indigo-100 text-indigo-950 px-3.5 py-1 rounded-full">ص 79 - 84</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- len() -->
+          <div class="bg-slate-50 p-5 rounded-2xl border-2 border-slate-200 space-y-2">
+            <span class="text-xs font-black bg-emerald-100 text-emerald-950 px-2 py-0.5 rounded-full">len() ص 79</span>
+            <h4 class="font-black text-slate-900 text-base">طول السلسلة</h4>
+            <code class="block font-mono bg-white p-2 rounded-xl text-xs font-black" dir="ltr">len("Kuwait") ➔ 6</code>
+          </div>
+
+          <!-- upper() -->
+          <div class="bg-slate-50 p-5 rounded-2xl border-2 border-slate-200 space-y-2">
+            <span class="text-xs font-black bg-blue-100 text-blue-950 px-2 py-0.5 rounded-full">upper() ص 80</span>
+            <h4 class="font-black text-slate-900 text-base">تحويل لأحرف كبيرة</h4>
+            <code class="block font-mono bg-white p-2 rounded-xl text-xs font-black" dir="ltr">"q8".upper() ➔ "Q8"</code>
+          </div>
+
+          <!-- lower() -->
+          <div class="bg-slate-50 p-5 rounded-2xl border-2 border-slate-200 space-y-2">
+            <span class="text-xs font-black bg-purple-100 text-purple-950 px-2 py-0.5 rounded-full">lower() ص 80</span>
+            <h4 class="font-black text-slate-900 text-base">تحويل لأحرف صغيرة</h4>
+            <code class="block font-mono bg-white p-2 rounded-xl text-xs font-black" dir="ltr">"KWT".lower() ➔ "kwt"</code>
+          </div>
+
+          <!-- find() -->
+          <div class="bg-slate-50 p-5 rounded-2xl border-2 border-slate-200 space-y-2">
+            <span class="text-xs font-black bg-amber-100 text-amber-950 px-2 py-0.5 rounded-full">find() ص 81</span>
+            <h4 class="font-black text-slate-900 text-base">إيجاد أول موضع</h4>
+            <code class="block font-mono bg-white p-2 rounded-xl text-xs font-black" dir="ltr">"cat".find("a") ➔ 1</code>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- TAB 7: ورقة عمل (8) وخريطة التدفق القياسية -->
+    <!-- ============================================== -->
+    <section id="content-worksheet" class="tab-content hidden space-y-6">
+      <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border-2 border-rose-300 space-y-6">
+        
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b-2 border-rose-100 pb-4">
+          <div>
+            <span class="text-xs md:text-sm font-black text-rose-800 bg-rose-100 px-3.5 py-1.5 rounded-full">الكتاب المدرسي • صفحة 85</span>
+            <h2 class="text-2xl md:text-3xl font-black text-slate-900 mt-1">📝 ورقة عمل (8): برنامج تأمين كلمة المرور</h2>
+          </div>
+
+          <!-- 10-Minute Timer -->
+          <div class="bg-rose-50 border-2 border-rose-300 p-3 rounded-2xl flex items-center gap-3">
+            <span class="text-2xl">⏳</span>
+            <div>
+              <span class="text-xs font-bold text-slate-600 block">مؤقت ورقة العمل (10 دقائق):</span>
+              <span id="worksheetTimerDisplay" class="font-mono font-black text-rose-600 text-2xl">10:00</span>
+            </div>
+            <div class="flex gap-1 mr-1">
+              <button onclick="startWorksheetTimer()" class="bg-rose-600 hover:bg-rose-700 text-white font-black px-3 py-1.5 rounded-xl text-xs transition">
+                بدء المؤقت
+              </button>
+              <button onclick="resetWorksheetTimer()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-2 py-1.5 rounded-xl text-xs transition">
+                🔄
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ======================================================= -->
+        <!-- خريطة التدفق المعتمدة بأشكال الكتاب المدرسي الرسمية -->
+        <!-- ======================================================= -->
+        <div class="bg-slate-50 p-6 rounded-3xl border-2 border-slate-200 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+            <span class="font-black text-slate-900 text-base md:text-lg">📊 خريطة تدفق البرنامج بالأشكال الهندسية المعتمدة في المنهج:</span>
+            <span class="text-xs bg-slate-200 text-slate-800 px-3 py-1 rounded-full font-bold">Flowchart ص 85</span>
+          </div>
+
+          <div class="flex flex-col items-center gap-2 py-2 text-xs md:text-sm font-black">
+            <!-- 1. البداية (شكل بيضاوي) -->
+            <div class="bg-amber-200 text-amber-950 px-8 py-2.5 rounded-full border-2 border-amber-400 shadow-xs">
+              1. البداية (Start) - شكل بيضاوي
+            </div>
+            <span class="text-slate-400 font-black text-base">↓</span>
+
+            <!-- 2. إدخال كلمة المرور (متوازي أضلاع) -->
+            <div class="parallelogram-shape bg-blue-100 text-blue-950 px-8 py-2.5 border-2 border-blue-400 shadow-xs">
+              <div class="parallelogram-content">
+                2. إدخال كلمة المرور بواسطة input() - متوازي أضلاع
+              </div>
+            </div>
+            <span class="text-slate-400 font-black text-base">↓</span>
+
+            <!-- 3. معالجة وعكس السلسلة (مستطيل صريح) -->
+            <div class="bg-emerald-100 text-emerald-950 px-8 py-2.5 border-2 border-emerald-400 shadow-xs rounded-none">
+              3. عملية التقطيع العكسي: reversed = password[::-1] - مستطيل عملية
+            </div>
+            <span class="text-slate-400 font-black text-base">↓</span>
+
+            <!-- 4. إخراج وطباعة الكلمة المعكوسة (متوازي أضلاع) -->
+            <div class="parallelogram-shape bg-purple-100 text-purple-950 px-8 py-2.5 border-2 border-purple-400 shadow-xs">
+              <div class="parallelogram-content">
+                4. طباعة كلمة المرور المحمية بواسطة print() - متوازي أضلاع
+              </div>
+            </div>
+            <span class="text-slate-400 font-black text-base">↓</span>
+
+            <!-- 5. النهاية (شكل بيضاوي) -->
+            <div class="bg-rose-200 text-rose-950 px-8 py-2.5 rounded-full border-2 border-rose-400 shadow-xs">
+              5. النهاية (End) - شكل بيضاوي
+            </div>
+          </div>
+        </div>
+
+        <!-- Student Workspace and Locked Teacher Solution -->
+        <div class="bg-slate-50 p-6 rounded-3xl border-2 border-slate-300 space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
+            <span class="font-mono font-black text-purple-950 text-base md:text-lg">📁 مساحة كتابة الكود: password_security.py</span>
+            <!-- Button to unlock solution by teacher order -->
+            <button onclick="revealWorksheetSolutionTeacher()" id="teacherUnlockBtn" class="bg-amber-400 hover:bg-amber-500 text-amber-950 px-4 py-2 rounded-xl text-xs md:text-sm font-black transition flex items-center gap-1.5 shadow-xs">
+              <span>👁️</span>
+              <span>إظهار الحل النموذجي (بأمر المعلمة)</span>
+            </button>
+          </div>
+
+          <textarea id="worksheetCodeEditor" rows="5" placeholder="# اكتبي الكود هنا...&#10;# 1. استقبلي كلمة المرور password&#10;# 2. اعكسي الكلمة باستخدام التقطيع العكسي [::-1]&#10;# 3. اطبعي الكلمة المعكوسة" class="w-full code-editor-light p-4 rounded-2xl resize-none shadow-inner" dir="ltr"></textarea>
+
+          <div class="flex items-center justify-between pt-1">
+            <button onclick="runWorksheetCodeTest()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-6 py-3 rounded-2xl text-base transition">
+              ▶️ تشغيل واختبار كود الطالبة
+            </button>
+            <span id="worksheetFeedback" class="text-base font-black min-h-[26px]"></span>
+          </div>
+
+          <!-- Locked Solution Container -->
+          <div id="lockedSolutionBox" class="hidden bg-emerald-50 border-3 border-emerald-400 p-5 rounded-2xl space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="font-black text-emerald-950 text-base md:text-lg">✨ الحل النموذجي المعتمد لورقة عمل (8) ص 85:</span>
+              <span class="text-xs bg-emerald-200 text-emerald-950 px-3 py-1 rounded-full font-black">حل معتمد</span>
+            </div>
+            <div class="bg-slate-900 text-emerald-400 p-4 rounded-xl font-mono text-base md:text-xl font-bold leading-relaxed shadow-inner" dir="ltr">
+              password = input("Enter password: ")<br>
+              secured_password = password[::-1]<br>
+              print("Secured Password:", secured_password)
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- TAB 8: التحدي والمختبر (مسابقة شاملة بـ 5 أنماط) -->
+    <!-- ============================================== -->
+    <section id="content-lab" class="tab-content hidden space-y-6">
+      <div class="bg-white rounded-3xl p-6 md:p-8 border-2 border-indigo-200 shadow-sm space-y-6">
+        
+        <!-- Header Banner with Score -->
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border-b-2 border-indigo-100 pb-4">
+          <div>
+            <span class="text-sm font-black bg-indigo-100 text-indigo-950 px-3.5 py-1 rounded-full">المختبر البرمجي والتقويم الختامي</span>
+            <h2 class="text-2xl md:text-4xl font-black text-slate-900 mt-1">🏆 مسابقة بطلة بايثون الشاملة</h2>
+          </div>
+          <div class="bg-amber-100 border-2 border-amber-400 text-amber-950 px-5 py-2.5 rounded-2xl font-mono font-black text-xl flex items-center gap-2">
+            <span>⭐ النقاط المحققة:</span>
+            <span id="totalScoreDisplay" class="text-2xl text-purple-950">0</span>
+          </div>
+        </div>
+
+        <!-- 5 Category Pills Switcher (Big Buttons) -->
+        <div class="flex flex-wrap items-center gap-2 pt-1 overflow-x-auto pb-1 max-w-full">
+          <button onclick="switchLabCategory('output')" id="btn-cat-output" class="cat-pill px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl text-xs sm:text-sm md:text-base font-black bg-indigo-600 text-white shadow-sm border-2 border-indigo-600 transition whitespace-nowrap">
+            1. ناتج تنفيذ تعليمة 🔍
+          </button>
+          <button onclick="switchLabCategory('code')" id="btn-cat-code" class="cat-pill px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl text-xs sm:text-sm md:text-base font-black bg-white text-slate-700 border-2 border-slate-300 transition whitespace-nowrap">
+            2. اكتبي التعليمة البرمجية ⌨️
+          </button>
+          <button onclick="switchLabCategory('tf')" id="btn-cat-tf" class="cat-pill px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl text-xs sm:text-sm md:text-base font-black bg-white text-slate-700 border-2 border-slate-300 transition whitespace-nowrap">
+            3. صح وخطأ ⚖️
+          </button>
+          <button onclick="switchLabCategory('fill')" id="btn-cat-fill" class="cat-pill px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl text-xs sm:text-sm md:text-base font-black bg-white text-slate-700 border-2 border-slate-300 transition whitespace-nowrap">
+            4. أكملي الفراغ ✏️
+          </button>
+          <button onclick="switchLabCategory('match')" id="btn-cat-match" class="cat-pill px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl text-xs sm:text-sm md:text-base font-black bg-white text-slate-700 border-2 border-slate-300 transition whitespace-nowrap">
+            5. وصلي بين التعليمة والناتج 🔗
+          </button>
+        </div>
+
+        <!-- CATEGORY 1: ناتج تنفيذ تعليمة (Output) -->
+        <div id="lab-sec-output" class="lab-category-sec space-y-4">
+          <div class="bg-indigo-950 text-white p-6 md:p-8 rounded-3xl space-y-5 border-2 border-indigo-700 shadow-md">
+            <div class="flex items-center justify-between text-amber-300 text-base font-black">
+              <span id="outputStepText">سؤال ناتج التنفيذ 1 من 3</span>
+              <span>+10 نقاط</span>
+            </div>
+            <h3 id="outputQuestionPrompt" class="text-xl md:text-3xl font-black text-white leading-relaxed">
+              ما ناتج تنفيذ: <code class="bg-slate-900 text-amber-300 px-3 py-1 rounded-xl font-mono text-2xl md:text-3xl" dir="ltr">"25" + "Feb"</code>؟
+            </h3>
+            <div id="outputOptionsBox" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2"></div>
+            <div id="outputFeedbackBox" class="text-base md:text-lg font-black min-h-[30px]"></div>
+          </div>
+        </div>
+
+        <!-- CATEGORY 2: اكتبي التعليمة البرمجية (Write Code) -->
+        <div id="lab-sec-code" class="lab-category-sec hidden space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <!-- Code Q1: Repeat -->
+            <div class="bg-slate-900 text-white p-6 rounded-3xl border-2 border-slate-700 space-y-4">
+              <span class="text-xs font-black bg-amber-400 text-amber-950 px-3 py-1 rounded-full">تكرار النصوص (*)</span>
+              <p class="font-black text-lg md:text-xl text-slate-100">
+                اكتبي التعليمة البرمجية لتكرار الرمز <code class="text-amber-300 font-mono text-2xl">"*"</code> عشر مرات متتالية:
+              </p>
+              <div class="flex gap-2">
+                <input type="text" id="labCodeIn1" placeholder="اكتبي التعليمة هنا..." class="flex-1 px-4 py-3 bg-slate-800 border-2 border-slate-600 rounded-2xl font-mono text-lg text-emerald-400 font-black text-center focus:outline-none focus:border-amber-400" dir="ltr">
+                <button onclick="checkLabCode(1, ['print(\'*\'*10)', 'print(\'*\' * 10)', '\'*\'*10', '\'*\' * 10'], 'labCodeRes1', '**********')" class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-black px-6 py-3 rounded-2xl text-base transition">
+                  اختبار الكود
+                </button>
+              </div>
+              <div id="labCodeRes1" class="text-base font-black min-h-[26px]"></div>
+            </div>
+
+            <!-- Code Q2: Concat -->
+            <div class="bg-slate-900 text-white p-6 rounded-3xl border-2 border-slate-700 space-y-4">
+              <span class="text-xs font-black bg-emerald-400 text-emerald-950 px-3 py-1 rounded-full">دمج النصوص (+)</span>
+              <p class="font-black text-lg md:text-xl text-slate-100">
+                لدينا: <code class="text-emerald-400 font-mono text-lg">a="Free"</code> و <code class="text-emerald-400 font-mono text-lg">b="Kuwait"</code>. اكتبي تعليمة دمجهما مع مسافة بينهما:
+              </p>
+              <div class="flex gap-2">
+                <input type="text" id="labCodeIn2" placeholder="اكتبي تعليمة الدمج..." class="flex-1 px-4 py-3 bg-slate-800 border-2 border-slate-600 rounded-2xl font-mono text-lg text-emerald-400 font-black text-center focus:outline-none focus:border-emerald-400" dir="ltr">
+                <button onclick="checkLabCode(2, ['print(a+\' \'+b)', 'print(a + \' \' + b)', 'a+\' \'+b', 'a + \' \' + b'], 'labCodeRes2', 'Free Kuwait')" class="bg-emerald-500 hover:bg-emerald-600 text-emerald-950 font-black px-6 py-3 rounded-2xl text-base transition">
+                  اختبار الكود
+                </button>
+              </div>
+              <div id="labCodeRes2" class="text-base font-black min-h-[26px]"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CATEGORY 3: صح وخطأ (True / False) -->
+        <div id="lab-sec-tf" class="lab-category-sec hidden space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <!-- TF 1 -->
+            <div class="bg-white p-6 rounded-3xl border-2 border-slate-200 shadow-sm space-y-4">
+              <span class="text-xs font-black bg-purple-100 text-purple-900 px-3 py-1 rounded-full">السؤال الأول</span>
+              <p class="font-black text-slate-800 text-lg md:text-xl leading-relaxed">
+                ناتج تنفيذ التعليمة: <code class="font-mono bg-slate-900 text-amber-300 px-2 py-0.5 rounded text-xl" dir="ltr">print("5" + "5")</code> في بايثون هو العدد <strong>10</strong>.
+              </p>
+              <div class="flex gap-3">
+                <button onclick="checkLabTf(this, false, 'labTfRes1', '❌ خطأ! ناتج جمع سلسلتين نصيتين هو دمجهما فينتج &quot;55&quot; وليس 10.')" class="flex-1 py-3 border-2 border-slate-300 hover:border-rose-400 rounded-2xl text-lg font-black transition">
+                  صح (True)
+                </button>
+                <button onclick="checkLabTf(this, true, 'labTfRes1', '✅ ممتازة وصحيحة! ناتج جمع سلسلتين نصيتين هو دمجهما معاً فينتج &quot;55&quot;.')" class="flex-1 py-3 border-2 border-slate-300 hover:border-emerald-500 rounded-2xl text-lg font-black transition">
+                  خطأ (False)
+                </button>
+              </div>
+              <div id="labTfRes1" class="text-base font-black min-h-[26px]"></div>
+            </div>
+
+            <!-- TF 2 -->
+            <div class="bg-white p-6 rounded-3xl border-2 border-slate-200 shadow-sm space-y-4">
+              <span class="text-xs font-black bg-purple-100 text-purple-900 px-3 py-1 rounded-full">السؤال الثاني</span>
+              <p class="font-black text-slate-800 text-lg md:text-xl leading-relaxed">
+                في بايثون، الفهرس السالب <code class="font-mono bg-slate-900 text-emerald-400 px-2 py-0.5 rounded text-xl" dir="ltr">-1</code> يمثل موقع الحرف الأخير في نهاية السلسلة النصية.
+              </p>
+              <div class="flex gap-3">
+                <button onclick="checkLabTf(this, true, 'labTfRes2', '✅ إجابة نموذجية! الفهرس العكسي يبدأ دائماً من -1 للحرف الأخير من اليمين.')" class="flex-1 py-3 border-2 border-slate-300 hover:border-emerald-500 rounded-2xl text-lg font-black transition">
+                  صح (True)
+                </button>
+                <button onclick="checkLabTf(this, false, 'labTfRes2', '❌ خطأ! العبارة صحيحة تماماً لأن -1 يمثل موقع الحرف الأخير.')" class="flex-1 py-3 border-2 border-slate-300 hover:border-rose-400 rounded-2xl text-lg font-black transition">
+                  خطأ (False)
+                </button>
+              </div>
+              <div id="labTfRes2" class="text-base font-black min-h-[26px]"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CATEGORY 4: أكملي الفراغ (Fill in the blanks) -->
+        <div id="lab-sec-fill" class="lab-category-sec hidden space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <!-- Fill 1 -->
+            <div class="bg-white p-6 rounded-3xl border-2 border-slate-200 shadow-sm space-y-4">
+              <span class="text-xs font-black bg-blue-100 text-blue-900 px-3 py-1 rounded-full">السؤال الأول (معاملات السلاسل)</span>
+              <p class="font-black text-slate-800 text-lg md:text-xl leading-relaxed">
+                المعامل المستخدم لدمج (Concatenation) سلسلتين نصيتين معاً في بايثون هو الرمز:
+              </p>
+              <div class="flex gap-2">
+                <input type="text" id="labFillIn1" placeholder="اكتبي الرمز..." class="flex-1 px-4 py-3 border-2 border-slate-300 rounded-2xl font-mono text-2xl font-black text-center bg-slate-50 focus:outline-none focus:border-blue-600" dir="ltr">
+                <button onclick="checkSingleBlank('labFillIn1', '+', 'labFillRes1', 'ممتازة! الرمز (+) يدمج النصوص معاً.')" class="bg-blue-600 hover:bg-blue-700 text-white font-black px-6 py-3 rounded-2xl text-base transition">
+                  تحقق ✨
+                </button>
+              </div>
+              <div id="labFillRes1" class="text-base font-black min-h-[26px]"></div>
+            </div>
+
+            <!-- Fill 2 -->
+            <div class="bg-white p-6 rounded-3xl border-2 border-slate-200 shadow-sm space-y-4">
+              <span class="text-xs font-black bg-blue-100 text-blue-900 px-3 py-1 rounded-full">السؤال الثاني (دوال السلاسل)</span>
+              <p class="font-black text-slate-800 text-lg md:text-xl leading-relaxed">
+                الدالة المستخدمة لحساب عدد حروف ورموز ومسافات السلسلة النصية هي الدالة:
+              </p>
+              <div class="flex gap-2">
+                <input type="text" id="labFillIn2" placeholder="اكتبي اسم الدالة..." class="flex-1 px-4 py-3 border-2 border-slate-300 rounded-2xl font-mono text-xl font-black text-center bg-slate-50 focus:outline-none focus:border-blue-600" dir="ltr">
+                <button onclick="checkSingleBlank('labFillIn2', 'len', 'labFillRes2', 'رائعة! الدالة len() تعيد الطول الإجمالي للسلسلة.')" class="bg-blue-600 hover:bg-blue-700 text-white font-black px-6 py-3 rounded-2xl text-base transition">
+                  تحقق ✨
+                </button>
+              </div>
+              <div id="labFillRes2" class="text-base font-black min-h-[26px]"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CATEGORY 5: وصلي بين التعليمة والناتج (Matching) -->
+        <div id="lab-sec-match" class="lab-category-sec hidden space-y-4">
+          <div class="bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-200 p-6 rounded-3xl space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="font-black text-slate-900 text-lg md:text-xl">
+                🔗 نشاط التوصيل التفاعلي: انقري على التعليمة في اليمين ثم انقري على ناتجها المطابق في اليسار
+              </h3>
+              <span class="text-xs bg-purple-200 text-purple-950 font-black px-3 py-1 rounded-full">+10 نقاط لكل تطابق</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+              <!-- Right Column: Commands -->
+              <div class="space-y-3">
+                <span class="font-black text-slate-700 text-base block mb-1">التعليمات البرمجية (انقري للاختيار):</span>
+                <div id="matchCmd1" onclick="selectMatchItem('cmd', 1)" class="match-item p-4 bg-white border-2 border-purple-300 hover:border-purple-600 rounded-2xl font-mono text-lg md:text-2xl font-black cursor-pointer transition shadow-xs flex items-center justify-between" dir="ltr">
+                  <span>"A" + "B"</span>
+                  <span class="text-xs bg-purple-100 text-purple-900 px-2 py-1 rounded font-sans font-black">تعليمة 1</span>
+                </div>
+                <div id="matchCmd2" onclick="selectMatchItem('cmd', 2)" class="match-item p-4 bg-white border-2 border-purple-300 hover:border-purple-600 rounded-2xl font-mono text-lg md:text-2xl font-black cursor-pointer transition shadow-xs flex items-center justify-between" dir="ltr">
+                  <span>"Go" * 2</span>
+                  <span class="text-xs bg-purple-100 text-purple-900 px-2 py-1 rounded font-sans font-black">تعليمة 2</span>
+                </div>
+                <div id="matchCmd3" onclick="selectMatchItem('cmd', 3)" class="match-item p-4 bg-white border-2 border-purple-300 hover:border-purple-600 rounded-2xl font-mono text-lg md:text-2xl font-black cursor-pointer transition shadow-xs flex items-center justify-between" dir="ltr">
+                  <span>"Kuwait"[0]</span>
+                  <span class="text-xs bg-purple-100 text-purple-900 px-2 py-1 rounded font-sans font-black">تعليمة 3</span>
+                </div>
+                <div id="matchCmd4" onclick="selectMatchItem('cmd', 4)" class="match-item p-4 bg-white border-2 border-purple-300 hover:border-purple-600 rounded-2xl font-mono text-lg md:text-2xl font-black cursor-pointer transition shadow-xs flex items-center justify-between" dir="ltr">
+                  <span>"123"[::-1]</span>
+                  <span class="text-xs bg-purple-100 text-purple-900 px-2 py-1 rounded font-sans font-black">تعليمة 4</span>
+                </div>
+              </div>
+
+              <!-- Left Column: Results -->
+              <div class="space-y-3">
+                <span class="font-black text-slate-700 text-base block mb-1">النواتج المتوقعة (انقري للتوصيل):</span>
+                <div id="matchRes3" onclick="selectMatchItem('res', 3)" class="match-item p-4 bg-white border-2 border-indigo-300 hover:border-indigo-600 rounded-2xl font-mono text-lg md:text-2xl font-black cursor-pointer transition shadow-xs flex items-center justify-between" dir="ltr">
+                  <span>'K'</span>
+                  <span class="match-badge text-xs bg-indigo-100 text-indigo-900 px-2 py-1 rounded font-sans font-black">ناتج</span>
+                </div>
+                <div id="matchRes1" onclick="selectMatchItem('res', 1)" class="match-item p-4 bg-white border-2 border-indigo-300 hover:border-indigo-600 rounded-2xl font-mono text-lg md:text-2xl font-black cursor-pointer transition shadow-xs flex items-center justify-between" dir="ltr">
+                  <span>"AB"</span>
+                  <span class="match-badge text-xs bg-indigo-100 text-indigo-900 px-2 py-1 rounded font-sans font-black">ناتج</span>
+                </div>
+                <div id="matchRes4" onclick="selectMatchItem('res', 4)" class="match-item p-4 bg-white border-2 border-indigo-300 hover:border-indigo-600 rounded-2xl font-mono text-lg md:text-2xl font-black cursor-pointer transition shadow-xs flex items-center justify-between" dir="ltr">
+                  <span>'321'</span>
+                  <span class="match-badge text-xs bg-indigo-100 text-indigo-900 px-2 py-1 rounded font-sans font-black">ناتج</span>
+                </div>
+                <div id="matchRes2" onclick="selectMatchItem('res', 2)" class="match-item p-4 bg-white border-2 border-indigo-300 hover:border-indigo-600 rounded-2xl font-mono text-lg md:text-2xl font-black cursor-pointer transition shadow-xs flex items-center justify-between" dir="ltr">
+                  <span>"GoGo"</span>
+                  <span class="match-badge text-xs bg-indigo-100 text-indigo-900 px-2 py-1 rounded font-sans font-black">ناتج</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="matchingSummaryFeedback" class="text-center font-black text-base pt-2 min-h-[30px]"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Mobile-Friendly Footer with Teacher Credits -->
+  <footer class="max-w-7xl mx-auto mt-8 pt-4 pb-2 border-t border-pink-200 text-center text-xs sm:text-sm text-slate-600 font-bold space-y-1">
+    <div class="flex flex-wrap items-center justify-center gap-2">
+      <span class="bg-purple-100 text-purple-950 px-3 py-1 rounded-full font-black">
+        👩‍🏫 إعداد وتصميم: أ. وفاء عليان - قسم الحاسوب
+      </span>
+      <span class="bg-emerald-100 text-emerald-950 px-3 py-1 rounded-full font-black">
+        🇰🇼 دولة الكويت - التوجيه الفني للحاسوب
+      </span>
+    </div>
+    <p class="text-[11px] text-slate-400">منصة تعليمية متجاوبة مخصصة للشاشات الذكية، الأجهزة اللوحية، والهواتف المحمولة</p>
+  </footer>
+
+  <script>
+    // ==========================================
+    // 1. ATTENDANCE & CLASS SELECTION
+    // ==========================================
+    function calculateAttendance() {
+      const totalInput = document.getElementById('totalStudents');
+      const presentInput = document.getElementById('presentStudents');
+      const absentDisplay = document.getElementById('absentDisplay');
+
+      if (!totalInput || !presentInput || !absentDisplay) return;
+
+      const total = parseInt(totalInput.value, 10) || 0;
+      const present = parseInt(presentInput.value, 10) || 0;
+      const absent = Math.max(0, total - present);
+
+      absentDisplay.value = `${absent} طالبة غائبة`;
+    }
+
+    function onClassChange() {
+      const classSelect = document.getElementById('classSelect');
+      const activeTag = document.getElementById('activeClassTag');
+      if (classSelect && activeTag) {
+        activeTag.textContent = classSelect.value;
+      }
+    }
+
+    // ==========================================
+    // 2. LIVE DATE & AUTOMATIC PERIOD TIMER
+    // ==========================================
+    const kuwaitPeriods = [
+      { id: '1-2', start: 7 * 60 + 55, end: 9 * 60 + 30, display: '09:30 ص' },
+      { id: '2-3', start: 8 * 60 + 45, end: 10 * 60 + 20, display: '10:20 ص' },
+      { id: '3-4', start: 9 * 60 + 35, end: 11 * 60 + 20, display: '11:20 ص' },
+      { id: '4-5', start: 10 * 60 + 35, end: 12 * 60 + 10, display: '12:10 م' },
+      { id: '5-6', start: 11 * 60 + 25, end: 13 * 60 + 5, display: '01:05 م' },
+      { id: '6-7', start: 12 * 60 + 20, end: 13 * 60 + 55, display: '01:55 م' },
+      { id: 'p1', start: 7 * 60 + 55, end: 8 * 60 + 40, display: '08:40 ص' },
+      { id: 'p2', start: 8 * 60 + 45, end: 9 * 60 + 30, display: '09:30 ص' },
+      { id: 'p3', start: 9 * 60 + 35, end: 10 * 60 + 20, display: '10:20 ص' },
+      { id: 'p4', start: 10 * 60 + 35, end: 11 * 60 + 20, display: '11:20 ص' },
+      { id: 'p5', start: 11 * 60 + 25, end: 12 * 60 + 10, display: '12:10 م' },
+      { id: 'p6', start: 12 * 60 + 20, end: 13 * 60 + 5, display: '01:05 م' },
+      { id: 'p7', start: 13 * 60 + 10, end: 13 * 60 + 55, display: '01:55 م' }
+    ];
+
+    let timerInterval = null;
+
+    function updateLiveSystemDate() {
+      const el = document.getElementById('currentDateDisplay');
+      if (!el) return;
+      const now = new Date();
+      el.textContent = now.toLocaleDateString('ar-KW', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+
+    function onPeriodChange() {
+      syncTimerWithLiveClock();
+    }
+
+    function syncTimerWithLiveClock() {
+      const now = new Date();
+      const currentMin = now.getHours() * 60 + now.getMinutes();
+      const currentSec = now.getSeconds();
+
+      const select = document.getElementById('periodSelect');
+      const val = select ? select.value : 'auto';
+
+      let period = null;
+      if (val === 'auto') {
+        period = kuwaitPeriods.find(p => currentMin >= p.start && currentMin < p.end);
+      } else {
+        period = kuwaitPeriods.find(p => p.id === val);
+      }
+
+      const countdownEl = document.getElementById('periodCountdown');
+      const statusEl = document.getElementById('periodTimeStatus');
+      const endEl = document.getElementById('periodEndTimeDisplay');
+
+      if (!period) {
+        if (countdownEl) countdownEl.textContent = '00:00';
+        if (statusEl) statusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-slate-400"></span> خارج أوقات الحصص';
+        if (endEl) endEl.textContent = 'انتهى الدوام';
+        return;
+      }
+
+      if (endEl) endEl.textContent = period.display;
+
+      if (currentMin < period.start) {
+        const waitSec = (period.start - currentMin) * 60 - currentSec;
+        renderCountdown(waitSec);
+        if (statusEl) statusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span> تبدأ قريباً';
+      } else if (currentMin >= period.end) {
+        if (countdownEl) countdownEl.textContent = '00:00';
+        if (statusEl) statusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500"></span> انتهت الحصة';
+      } else {
+        const remSec = (period.end - currentMin) * 60 - currentSec;
+        renderCountdown(remSec);
+        if (statusEl) statusEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> الحصة جارية الآن';
+      }
+    }
+
+    function renderCountdown(totalSec) {
+      const el = document.getElementById('periodCountdown');
+      if (!el) return;
+      const m = Math.floor(Math.max(0, totalSec) / 60);
+      const s = Math.max(0, totalSec) % 60;
+      el.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    // ==========================================
+    // 3. TAB NAVIGATION
+    // ==========================================
+    function switchTab(tabKey) {
+      document.querySelectorAll('.tab-content').forEach(s => s.classList.add('hidden'));
+      document.querySelectorAll('.nav-btn').forEach(b => {
+        b.className = 'nav-btn px-4 py-2.5 rounded-2xl text-sm md:text-base font-black transition border-2 border-pink-200 bg-white hover:bg-purple-50 text-slate-700 shadow-xs';
+      });
+
+      const sec = document.getElementById(`content-${tabKey}`);
+      const btn = document.getElementById(`tab-${tabKey}`);
+
+      if (sec) sec.classList.remove('hidden');
+      if (btn) {
+        btn.className = 'nav-btn px-4 py-2.5 rounded-2xl text-sm md:text-base font-black transition border-2 border-emerald-600 bg-emerald-600 text-white shadow-md';
+      }
+
+      if (tabKey === 'indexing') renderIndexingTable();
+      if (tabKey === 'slicing') renderSlicingTable();
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    // ==========================================
+    // 4. HORIZONTAL INDEXING TABLE (صورة المستخدم)
+    // ==========================================
+    let currentIdxWord = "Free Kuwait";
+
+    function setIndexingWord(w) {
+      const inp = document.getElementById('indexingWordInput');
+      if (inp) inp.value = w;
+      renderIndexingTable();
+    }
+
+    function renderIndexingTable() {
+      const inp = document.getElementById('indexingWordInput');
+      if (inp) currentIdxWord = inp.value || "Kuwait";
+
+      const len = currentIdxWord.length;
+      const lenEl = document.getElementById('wordLengthDisplay');
+      if (lenEl) lenEl.textContent = len;
+
+      const posRow = document.getElementById('positiveRowContainer');
+      const charRow = document.getElementById('characterRowContainer');
+      const negRow = document.getElementById('negativeRowContainer');
+
+      if (!posRow || !charRow || !negRow) return;
+
+      // السطر الأول: رأس الخلية "الفهرس الموجب [+]" ثم الأرقام
+      posRow.innerHTML = `
+        <th class="p-3 border border-emerald-200 bg-emerald-200 text-emerald-950 w-36 font-sans text-xs md:text-sm font-black" dir="rtl">
+          الفهرس الموجب [+]
+        </th>
+      `;
+      // السطر الثاني: رأس الخلية "حروف السلسلة" ثم الحروف
+      charRow.innerHTML = `
+        <th class="p-3 border border-emerald-200 bg-emerald-50 text-emerald-900 font-sans text-xs md:text-sm w-36 font-black" dir="rtl">
+          حروف السلسلة
+        </th>
+      `;
+      // السطر الثالث: رأس الخلية "الفهرس العكسي [-]" ثم الأرقام
+      negRow.innerHTML = `
+        <th class="p-3 border border-rose-200 bg-rose-100 text-rose-950 w-36 font-sans text-xs md:text-sm font-black" dir="rtl">
+          الفهرس العكسي [-]
+        </th>
+      `;
+
+      for (let i = 0; i < len; i++) {
+        const ch = currentIdxWord[i];
+        const displayChar = ch === ' ' ? '␣' : ch;
+
+        const tdPos = document.createElement('td');
+        tdPos.className = 'p-3 border border-emerald-200 font-mono font-black text-emerald-900 text-base md:text-lg';
+        tdPos.textContent = i;
+        posRow.appendChild(tdPos);
+
+        const tdChar = document.createElement('td');
+        tdChar.className = 'p-3 border border-emerald-200 font-mono font-black text-slate-900 text-xl md:text-2xl';
+        tdChar.textContent = displayChar;
+        charRow.appendChild(tdChar);
+
+        const tdNeg = document.createElement('td');
+        tdNeg.className = 'p-3 border border-rose-200 font-mono font-black text-rose-700 text-base md:text-lg';
+        tdNeg.textContent = i - len;
+        negRow.appendChild(tdNeg);
+      }
+
+      // Update Quick Examples
+      const e0 = document.getElementById('exIdx0');
+      const e1 = document.getElementById('exIdx1');
+      const en1 = document.getElementById('exIdxNeg1');
+      const en2 = document.getElementById('exIdxNeg2');
+      if (e0) e0.textContent = `'${currentIdxWord[0] || ''}'`;
+      if (e1) e1.textContent = `'${currentIdxWord[1] || ''}'`;
+      if (en1) en1.textContent = `'${currentIdxWord[len - 1] || ''}'`;
+      if (en2) en2.textContent = `'${currentIdxWord[len - 2] || ''}'`;
+    }
+
+    // ==========================================
+    // 5. HORIZONTAL SLICING TABLE (تظليل الأخضر النعناعي)
+    // ==========================================
+    let currentSliceWord = "Free Kuwait";
+
+    function setSlicingWord(w) {
+      const inp = document.getElementById('slicingWordInput');
+      if (inp) inp.value = w;
+      renderSlicingTable();
+    }
+
+    function syncStartNum(v) {
+      const slider = document.getElementById('sliceStartSlider');
+      if (slider) slider.value = v;
+      updateLiveSlice();
+    }
+
+    function syncStopNum(v) {
+      const slider = document.getElementById('sliceStopSlider');
+      if (slider) slider.value = v;
+      updateLiveSlice();
+    }
+
+    function setQuickStep(s) {
+      const sel = document.getElementById('sliceStepSelect');
+      if (sel) sel.value = s;
+      updateLiveSlice();
+    }
+
+    function renderSlicingTable() {
+      const inp = document.getElementById('slicingWordInput');
+      if (inp) currentSliceWord = inp.value || "Kuwait";
+
+      const len = currentSliceWord.length;
+      const lenEl = document.getElementById('sliceWordLengthDisplay');
+      if (lenEl) lenEl.textContent = len;
+
+      const startSlider = document.getElementById('sliceStartSlider');
+      const stopSlider = document.getElementById('sliceStopSlider');
+      const startNum = document.getElementById('sliceStartNum');
+      const stopNum = document.getElementById('sliceStopNum');
+
+      if (startSlider && stopSlider) {
+        startSlider.max = len;
+        stopSlider.max = len;
+        if (startNum) startNum.max = len;
+        if (stopNum) stopNum.max = len;
+      }
+
+      updateLiveSlice();
+    }
+
+    function updateLiveSlice() {
+      const len = currentSliceWord.length;
+      const startSlider = document.getElementById('sliceStartSlider');
+      const stopSlider = document.getElementById('sliceStopSlider');
+      const stepSelect = document.getElementById('sliceStepSelect');
+
+      if (!startSlider || !stopSlider || !stepSelect) return;
+
+      let start = parseInt(startSlider.value, 10);
+      let stop = parseInt(stopSlider.value, 10);
+      let step = parseInt(stepSelect.value, 10);
+
+      const startNum = document.getElementById('sliceStartNum');
+      const stopNum = document.getElementById('sliceStopNum');
+      if (startNum) startNum.value = start;
+      if (stopNum) stopNum.value = stop;
+
+      // Determine Selected Indices
+      let selectedIndices = [];
+      if (step > 0) {
+        for (let i = start; i < stop && i < len; i += step) {
+          selectedIndices.push(i);
+        }
+      } else if (step < 0) {
+        for (let i = len - 1; i >= 0; i += step) {
+          selectedIndices.push(i);
+        }
+      }
+
+      // Render Horizontal Table
+      const posRow = document.getElementById('slicePosRowContainer');
+      const charRow = document.getElementById('sliceCharRowContainer');
+      const negRow = document.getElementById('sliceNegRowContainer');
+
+      if (posRow && charRow && negRow) {
+        posRow.innerHTML = `
+          <th class="p-3 border border-emerald-200 bg-emerald-200 text-emerald-950 w-36 font-sans text-xs md:text-sm font-black" dir="rtl">
+            الفهرس الموجب [+]
+          </th>
+        `;
+        charRow.innerHTML = `
+          <th class="p-3 border border-emerald-200 bg-emerald-50 text-emerald-900 font-sans text-xs md:text-sm w-36 font-black" dir="rtl">
+            حروف السلسلة
+          </th>
+        `;
+        negRow.innerHTML = `
+          <th class="p-3 border border-rose-200 bg-rose-100 text-rose-950 w-36 font-sans text-xs md:text-sm font-black" dir="rtl">
+            الفهرس العكسي [-]
+          </th>
+        `;
+
+        for (let i = 0; i < len; i++) {
+          const ch = currentSliceWord[i];
+          const displayChar = ch === ' ' ? '␣' : ch;
+          const isSelected = selectedIndices.includes(i);
+
+          const tdPos = document.createElement('td');
+          tdPos.className = `p-3 border border-emerald-200 font-mono font-black text-emerald-900 text-base md:text-lg ${isSelected ? 'bg-emerald-200' : ''}`;
+          tdPos.textContent = i;
+          posRow.appendChild(tdPos);
+
+          // الخلية المظللة بالنعناعي المطابقة لصورة المستخدم
+          const tdChar = document.createElement('td');
+          tdChar.className = `p-3 border font-mono font-black text-xl md:text-2xl transition-all duration-200 ${
+            isSelected 
+              ? 'bg-emerald-100 border-2 border-emerald-500 text-emerald-950 font-black scale-105' 
+              : 'bg-white border-emerald-200 text-slate-800'
+          }`;
+          tdChar.textContent = displayChar;
+          charRow.appendChild(tdChar);
+
+          const tdNeg = document.createElement('td');
+          tdNeg.className = `p-3 border border-rose-200 font-mono font-black text-rose-700 text-base md:text-lg ${isSelected ? 'bg-rose-100' : ''}`;
+          tdNeg.textContent = i - len;
+          negRow.appendChild(tdNeg);
+        }
+      }
+
+      // Generate Giant Code & Sliced Output
+      const codeEl = document.getElementById('giantCodeDisplay');
+      const outEl = document.getElementById('giantOutputDisplay');
+
+      let codeStr = '';
+      let resultStr = '';
+
+      if (step === -1 && start === 0 && stop === len) {
+        codeStr = `print(text[::-1])`;
+        resultStr = currentSliceWord.split('').reverse().join('');
+      } else {
+        const stepPart = step !== 1 ? `:${step}` : '';
+        codeStr = `print(text[${start}:${stop}${stepPart}])`;
+
+        if (step > 0) {
+          resultStr = currentSliceWord.slice(start, stop);
+          if (step > 1) {
+            let temp = '';
+            for (let i = start; i < stop && i < len; i += step) {
+              temp += currentSliceWord[i];
+            }
+            resultStr = temp;
+          }
+        } else {
+          resultStr = currentSliceWord.split('').reverse().join('');
+        }
+      }
+
+      if (codeEl) codeEl.textContent = codeStr;
+      if (outEl) outEl.textContent = `"${resultStr}"`;
+    }
+
+    // ==========================================
+    // 6. QUESTION CHECKERS & FEEDBACK
+    // ==========================================
+    function checkIndexingQ(btn, isCorrect, resId, val) {
+      const res = document.getElementById(resId);
+      if (isCorrect) {
+        res.innerHTML = `✅ <span class="text-emerald-700">إجابة صحيحة وممتازة! ناتج word[-1] هو '${val}'.</span>`;
+        btn.classList.add('bg-emerald-100', 'border-emerald-500');
+        triggerConfetti();
+      } else {
+        res.innerHTML = `❌ <span class="text-rose-600">إجابة خاطئة. الفهرس -1 يمثل الحرف الأخير من اليمين.</span>`;
+        btn.classList.add('bg-rose-100', 'border-rose-400');
+      }
+    }
+
+    function checkSlicingQ(btn, isCorrect, resId, val) {
+      const res = document.getElementById(resId);
+      if (isCorrect) {
+        res.innerHTML = `✅ <span class="text-emerald-700">ممتازة وصحيحة! ناتج text[0:4] هو "${val}" لأن النهاية 4 غير مشمولة.</span>`;
+        btn.classList.add('bg-emerald-100', 'border-emerald-500');
+        triggerConfetti();
+      } else {
+        res.innerHTML = `❌ <span class="text-rose-600">خطأ! تذكري أن موقع النهاية stop غير مشمول في الناتج دائماً.</span>`;
+        btn.classList.add('bg-rose-100', 'border-rose-400');
+      }
+    }
+
+    function checkCodeWriting(inputId, validCodes, resId, output) {
+      const input = document.getElementById(inputId);
+      const res = document.getElementById(resId);
+      if (!input || !res) return;
+
+      const raw = input.value.trim().replace(/\s+/g, '');
+      const isMatch = validCodes.some(c => raw === c.replace(/\s+/g, ''));
+
+      if (isMatch) {
+        res.innerHTML = `✅ <span class="text-emerald-700">تعليمة برمجية صحيحة 100%! الناتج: <b class="font-mono bg-emerald-100 px-2 py-0.5 rounded text-emerald-950">"${output}"</b></span>`;
+        triggerConfetti();
+      } else {
+        res.innerHTML = `❌ <span class="text-rose-600">صيغة غير مطابقة. تأكدي من كتابة المتغير والأقواس المربعة [ ] بدقة!</span>`;
+      }
+    }
+
+    function checkTfCustom(btn, isCorrect, resId, msg) {
+      const res = document.getElementById(resId);
+      if (!res) return;
+      res.textContent = msg;
+      if (isCorrect) {
+        res.className = "text-base font-black min-h-[26px] text-emerald-700";
+        btn.classList.add('bg-emerald-100', 'border-emerald-500');
+        triggerConfetti();
+      } else {
+        res.className = "text-base font-black min-h-[26px] text-rose-600";
+        btn.classList.add('bg-rose-100', 'border-rose-500');
+      }
+    }
+
+    function checkSingleBlank(inputId, correctVal, resId, feedbackMsg) {
+      const input = document.getElementById(inputId);
+      const res = document.getElementById(resId);
+      if (!input || !res) return;
+
+      if (input.value.trim().toLowerCase() === correctVal.trim().toLowerCase()) {
+        res.innerHTML = `✅ <span class="text-emerald-700">${feedbackMsg}</span>`;
+        triggerConfetti();
+      } else {
+        res.innerHTML = `❌ <span class="text-rose-600">إجابة غير صحيحة، راجعي المطلوب وحاولي ثانية!</span>`;
+      }
+    }
+
+    // ==========================================
+    // 7. LAB & COMPETITION (5 MODES)
+    // ==========================================
+    let totalScore = 0;
+
+    function addScore(pts) {
+      totalScore += pts;
+      const el = document.getElementById('totalScoreDisplay');
+      if (el) el.textContent = totalScore;
+      triggerConfetti();
+    }
+
+    function switchLabCategory(catKey) {
+      document.querySelectorAll('.lab-category-sec').forEach(sec => sec.classList.add('hidden'));
+      document.querySelectorAll('.cat-pill').forEach(btn => {
+        btn.className = 'cat-pill px-4 py-2.5 rounded-2xl text-sm md:text-base font-black bg-white text-slate-700 border-2 border-slate-300 transition';
+      });
+
+      const sec = document.getElementById(`lab-sec-${catKey}`);
+      const btn = document.getElementById(`btn-cat-${catKey}`);
+      if (sec) sec.classList.remove('hidden');
+      if (btn) {
+        btn.className = 'cat-pill px-4 py-2.5 rounded-2xl text-sm md:text-base font-black bg-indigo-600 text-white shadow-sm border-2 border-indigo-600 transition';
+      }
+    }
+
+    // Output Questions Sequence
+    const labOutputQuestions = [
+      { q: 'ما ناتج تنفيذ: <code class="bg-slate-900 text-amber-300 px-3 py-1 rounded-xl font-mono text-2xl" dir="ltr">"25" + "Feb"</code>؟', opts: ['"25Feb"', '25 Feb', 'Error', '27'], ans: 0 },
+      { q: 'ما ناتج تنفيذ: <code class="bg-slate-900 text-amber-300 px-3 py-1 rounded-xl font-mono text-2xl" dir="ltr">"Go" * 3</code>؟', opts: ['"Go3"', '"GoGoGo"', 'Go 3', 'Error'], ans: 1 },
+      { q: 'ما ناتج تنفيذ: <code class="bg-slate-900 text-amber-300 px-3 py-1 rounded-xl font-mono text-2xl" dir="ltr">"Kuwait"[0:2]</code>؟', opts: ['"Ku"', '"Kuw"', '"K"', '"u"'], ans: 0 }
+    ];
+    let curOutQ = 0;
+
+    function renderOutputQuestion() {
+      const q = labOutputQuestions[curOutQ];
+      const stepEl = document.getElementById('outputStepText');
+      const promptEl = document.getElementById('outputQuestionPrompt');
+      const optsBox = document.getElementById('outputOptionsBox');
+      const fbBox = document.getElementById('outputFeedbackBox');
+
+      if (stepEl) stepEl.textContent = `سؤال ناتج التنفيذ ${curOutQ + 1} من ${labOutputQuestions.length}`;
+      if (promptEl) promptEl.innerHTML = q.q;
+      if (fbBox) fbBox.innerHTML = '';
+      if (!optsBox) return;
+
+      optsBox.innerHTML = '';
+      q.opts.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'p-4 bg-slate-900 hover:bg-slate-800 border-2 border-indigo-500 rounded-2xl font-mono text-xl md:text-2xl font-black text-amber-300 transition text-center';
+        btn.textContent = opt;
+        btn.onclick = () => answerLabOutput(idx, btn);
+        optsBox.appendChild(btn);
+      });
+    }
+
+    function answerLabOutput(choiceIdx, btn) {
+      const q = labOutputQuestions[curOutQ];
+      const fb = document.getElementById('outputFeedbackBox');
+
+      if (choiceIdx === q.ans) {
+        fb.innerHTML = '🎉 <span class="text-emerald-400">إجابة صحيحة وممتازة! +10 نقاط</span>';
+        btn.classList.add('bg-emerald-600', 'border-emerald-300');
+        addScore(10);
+
+        setTimeout(() => {
+          if (curOutQ < labOutputQuestions.length - 1) {
+            curOutQ++;
+            renderOutputQuestion();
+          } else {
+            fb.innerHTML = '🏆 <span class="text-amber-300">أحسنتِ صنعاً! أنهيتِ جميع أسئلة نواتج التنفيذ بنجاح!</span>';
+          }
+        }, 1300);
+      } else {
+        fb.innerHTML = '❌ <span class="text-rose-400">إجابة غير صحيحة، حاولي مرة أخرى!</span>';
+        btn.classList.add('bg-rose-900', 'border-rose-400');
+      }
+    }
+
+    function checkLabCode(qNum, validCodes, resId, actual) {
+      const inp = document.getElementById(`labCodeIn${qNum}`);
+      const res = document.getElementById(resId);
+      if (!inp || !res) return;
+
+      const raw = inp.value.trim().replace(/\s+/g, '');
+      const isMatch = validCodes.some(c => raw === c.replace(/\s+/g, ''));
+
+      if (isMatch) {
+        res.innerHTML = `✅ <span class="text-emerald-400">كود صحيح 100%! الناتج: <b class="font-mono text-amber-300">"${actual}"</b> (+10 نقاط)</span>`;
+        addScore(10);
+      } else {
+        res.innerHTML = `❌ <span class="text-rose-400">الكود غير دقيق، راجعي استخدام المعامل المطلوب!</span>`;
+      }
+    }
+
+    function checkLabTf(btn, isCorrect, resId, msg) {
+      const res = document.getElementById(resId);
+      if (!res) return;
+      res.textContent = msg;
+      if (isCorrect) {
+        res.className = "text-base font-black min-h-[26px] text-emerald-700";
+        btn.classList.add('bg-emerald-100', 'border-emerald-500');
+        addScore(10);
+      } else {
+        res.className = "text-base font-black min-h-[26px] text-rose-600";
+        btn.classList.add('bg-rose-100', 'border-rose-500');
+      }
+    }
+
+    // Matching Activity
+    let selectedMatchCmd = null;
+    let completedMatches = 0;
+
+    function selectMatchItem(type, id) {
+      if (type === 'cmd') {
+        selectedMatchCmd = id;
+        document.querySelectorAll('.match-item').forEach(el => el.classList.remove('ring-4', 'ring-purple-500'));
+        const cmdEl = document.getElementById(`matchCmd${id}`);
+        if (cmdEl) cmdEl.classList.add('ring-4', 'ring-purple-500');
+      } else if (type === 'res' && selectedMatchCmd !== null) {
+        if (selectedMatchCmd === id) {
+          // Success Match
+          const cmdEl = document.getElementById(`matchCmd${id}`);
+          const resEl = document.getElementById(`matchRes${id}`);
+          if (cmdEl) cmdEl.className = 'p-4 bg-emerald-100 border-2 border-emerald-500 rounded-2xl font-mono text-xl font-black text-emerald-950 flex items-center justify-between pointer-events-none';
+          if (resEl) resEl.className = 'p-4 bg-emerald-100 border-2 border-emerald-500 rounded-2xl font-mono text-xl font-black text-emerald-950 flex items-center justify-between pointer-events-none';
+
+          completedMatches++;
+          addScore(10);
+          selectedMatchCmd = null;
+
+          const fb = document.getElementById('matchingSummaryFeedback');
+          if (completedMatches === 4 && fb) {
+            fb.innerHTML = '🎉 <span class="text-emerald-700 text-lg">ألف مبروك! قمتِ بتوصيل جميع التعليمات بنواتجها الصحيحة بنجاح!</span>';
+          }
+        } else {
+          // Wrong Match
+          const fb = document.getElementById('matchingSummaryFeedback');
+          if (fb) fb.innerHTML = '❌ <span class="text-rose-600">التوصيل غير صحيح، راجعي ناتج التعليمة المحددة وحاولي مجدداً!</span>';
+        }
+      }
+    }
+
+    // ==========================================
+    // 8. TIMERS (STARTER & WORKSHEET)
+    // ==========================================
+    let starterSec = 120;
+    let starterInterval = null;
+
+    function startStarterTimer() {
+      if (starterInterval) clearInterval(starterInterval);
+      starterSec = 120;
+      const display = document.getElementById('starterTimerDisplay');
+      starterInterval = setInterval(() => {
+        if (starterSec > 0) {
+          starterSec--;
+          const m = Math.floor(starterSec / 60);
+          const s = starterSec % 60;
+          if (display) display.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        } else {
+          clearInterval(starterInterval);
+          revealStarterSolution();
+        }
+      }, 1000);
+    }
+
+    function revealStarterSolution() {
+      const e1 = document.getElementById('starterErr1');
+      const e2 = document.getElementById('starterErr2');
+      const l1 = document.getElementById('starterLine1');
+      const res = document.getElementById('starterResultExplanation');
+
+      if (e1) e1.classList.remove('hidden');
+      if (e2) e2.classList.remove('hidden');
+      if (l1) l1.className = 'p-4 bg-rose-950 border-2 border-rose-500 rounded-2xl text-rose-200 flex items-center justify-between font-black';
+      if (res) res.classList.remove('hidden');
+      triggerConfetti();
+    }
+
+    let wsSec = 600;
+    let wsInterval = null;
+
+    function startWorksheetTimer() {
+      if (wsInterval) clearInterval(wsInterval);
+      wsSec = 600;
+      const display = document.getElementById('worksheetTimerDisplay');
+      wsInterval = setInterval(() => {
+        if (wsSec > 0) {
+          wsSec--;
+          const m = Math.floor(wsSec / 60);
+          const s = wsSec % 60;
+          if (display) display.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        } else {
+          clearInterval(wsInterval);
+          revealWorksheetSolutionTeacher();
+        }
+      }, 1000);
+    }
+
+    function resetWorksheetTimer() {
+      if (wsInterval) clearInterval(wsInterval);
+      wsSec = 600;
+      const display = document.getElementById('worksheetTimerDisplay');
+      if (display) display.textContent = '10:00';
+    }
+
+    function revealWorksheetSolutionTeacher() {
+      const box = document.getElementById('lockedSolutionBox');
+      if (box) {
+        box.classList.remove('hidden');
+        triggerConfetti();
+      }
+    }
+
+    function runWorksheetCodeTest() {
+      const code = document.getElementById('worksheetCodeEditor').value.trim();
+      const fb = document.getElementById('worksheetFeedback');
+      if (!fb) return;
+
+      if (code.includes('[::-1]')) {
+        fb.innerHTML = '✅ <span class="text-emerald-700">كود بايثون صحيح ومثالي! استخدمتِ صيغة التقطيع العكسي [::-1].</span>';
+        triggerConfetti();
+      } else {
+        fb.innerHTML = '⚠️ <span class="text-amber-800">تأكدي من استخدام التقطيع العكسي [::-1] لعكس كلمة المرور!</span>';
+      }
+    }
+
+    // Face Scan & Confetti
+    function triggerFaceScan() {
+      const box = document.getElementById('scanStatusBox');
+      if (!box) return;
+      box.textContent = 'جاري مطابقة المعالم الحيوية للوجه مع تطبيق هويتي...';
+      setTimeout(() => {
+        box.innerHTML = '✅ <span class="text-emerald-700">تمت المصادقة البيومترية بنجاح! المستخدم مصرح له بالدخول.</span>';
+        triggerConfetti();
+      }, 1500);
+    }
+
+    function triggerConfetti() {
+      if (typeof confetti === 'function') {
+        confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
+      }
+    }
+
+    // ==========================================
+    // 9. WINDOW ONLOAD INITIALIZATION
+    // ==========================================
+    window.onload = function () {
+      calculateAttendance();
+      updateLiveSystemDate();
+      syncTimerWithLiveClock();
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(syncTimerWithLiveClock, 1000);
+
+      renderIndexingTable();
+      renderSlicingTable();
+      renderOutputQuestion();
+    };
+  </script>
+</body>
+</html>
